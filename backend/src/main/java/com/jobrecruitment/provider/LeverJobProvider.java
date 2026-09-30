@@ -2,12 +2,8 @@ package com.jobrecruitment.provider;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jobrecruitment.classifier.FresherClassificationResult;
-import com.jobrecruitment.classifier.FresherEligibilityService;
-import com.jobrecruitment.classifier.FresherJobClassifier;
-import com.jobrecruitment.classifier.SkillRelevanceExtractor;
-import com.jobrecruitment.entity.AggregatedJob;
-import com.jobrecruitment.entity.CompanySource;
+import com.jobrecruitment.classifier.*;
+import com.jobrecruitment.entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -28,18 +24,18 @@ public class LeverJobProvider implements JobSourceProvider {
 
     private static final Logger log = LoggerFactory.getLogger(LeverJobProvider.class);
     private final ObjectMapper objectMapper;
+    private final FresherJobEligibilityService eligibilityService;
     private final FresherJobClassifier classifier;
-    private final FresherEligibilityService eligibilityService;
     private final SkillRelevanceExtractor skillExtractor;
     private final HttpClient httpClient;
 
     public LeverJobProvider(ObjectMapper objectMapper,
+                            FresherJobEligibilityService eligibilityService,
                             FresherJobClassifier classifier,
-                            FresherEligibilityService eligibilityService,
                             SkillRelevanceExtractor skillExtractor) {
         this.objectMapper = objectMapper;
-        this.classifier = classifier;
         this.eligibilityService = eligibilityService;
+        this.classifier = classifier;
         this.skillExtractor = skillExtractor;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
@@ -100,20 +96,6 @@ public class LeverJobProvider implements JobSourceProvider {
                         node.path("text").asText("").toLowerCase().contains("remote");
                 dto.setRemote(isRemote);
 
-                if (location.toLowerCase().contains("india") ||
-                    location.toLowerCase().contains("bengaluru") ||
-                    location.toLowerCase().contains("bangalore") ||
-                    location.toLowerCase().contains("hyderabad") ||
-                    location.toLowerCase().contains("pune") ||
-                    location.toLowerCase().contains("chennai") ||
-                    location.toLowerCase().contains("mumbai") ||
-                    location.toLowerCase().contains("noida") ||
-                    location.toLowerCase().contains("gurgaon")) {
-                    dto.setCountry("India");
-                } else {
-                    dto.setCountry(source.getCountry() != null ? source.getCountry() : "Global");
-                }
-
                 dto.setDepartment(categories.path("department").asText("Engineering"));
                 dto.setEmploymentType(categories.path("commitment").asText("Full Time"));
 
@@ -146,25 +128,43 @@ public class LeverJobProvider implements JobSourceProvider {
         job.setTitle(rawJob.getTitle());
         job.setDescription(rawJob.getDescription());
         job.setLocation(rawJob.getLocation());
-        job.setCountry(rawJob.getCountry());
         job.setDepartment(rawJob.getDepartment());
         job.setEmploymentType(rawJob.getEmploymentType());
         job.setPostedAt(rawJob.getPostedAt() != null ? rawJob.getPostedAt() : LocalDateTime.now());
         job.setApplicationUrl(rawJob.getApplicationUrl());
         job.setSourceUrl(rawJob.getSourceUrl());
-        job.setRemote(rawJob.isRemote());
         job.setCurrency("INR");
 
-        // Strict 0-year fresher eligibility check
-        FresherEligibilityService.EligibilityResult eligibility = eligibilityService.determineEligibility(rawJob.getTitle(), rawJob.getDescription());
-        job.setEligibilityStatus(eligibility.status());
-        job.setMinimumExperienceYears(eligibility.minimumExperienceYears());
-        boolean isZeroYear = eligibility.status() == com.jobrecruitment.entity.EligibilityStatus.ELIGIBLE_ZERO_YEAR;
-        job.setFresher(isZeroYear);
+        // Central Eligibility Decision (Strict India + Strict 0-Year Experience)
+        FresherJobEligibilityService.FresherEligibilityDecision decision =
+                eligibilityService.evaluateEligibility(rawJob.getTitle(), rawJob.getDescription(), rawJob.getLocation());
 
+        // Location classification
+        job.setCountry(decision.location().country());
+        job.setState(decision.location().state());
+        job.setCity(decision.location().city());
+        job.setLocationClassification(decision.location().classification());
+        job.setRemote(decision.location().isRemote());
+
+        // Experience classification
+        if (decision.experience() != null) {
+            job.setEligibilityStatus(decision.experience().experienceClassification());
+            job.setMinimumExperienceYears(decision.experience().minimumExperienceYears());
+            job.setMaximumExperienceYears(decision.experience().maximumExperienceYears());
+            job.setExperienceText(decision.experience().experienceText());
+        } else {
+            job.setEligibilityStatus(EligibilityStatus.UNKNOWN);
+            job.setMinimumExperienceYears(null);
+            job.setMaximumExperienceYears(null);
+            job.setExperienceText(null);
+        }
+
+        job.setFresher(decision.isEligible());
+
+        // Classification
         FresherClassificationResult result = classifier.classify(rawJob.getTitle(), rawJob.getDescription());
-        job.setExperienceLevel(isZeroYear ? com.jobrecruitment.entity.ExperienceLevel.FRESHER : result.getExperienceLevel());
-        job.setFresherConfidence(isZeroYear ? Math.max(result.getConfidence(), 30) : result.getConfidence());
+        job.setExperienceLevel(decision.isEligible() ? ExperienceLevel.FRESHER : result.getExperienceLevel());
+        job.setFresherConfidence(decision.isEligible() ? Math.max(result.getConfidence(), 50) : 0);
 
         job.setSkills(skillExtractor.extractSkills(rawJob.getTitle(), rawJob.getDescription()));
         job.setActive(true);

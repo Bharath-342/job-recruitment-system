@@ -423,7 +423,7 @@ export default function FresherJobs() {
                     {/* Fresher & Experience Tag - Strictly 0-Year Only */}
                     <div className="mb-3">
                       <Badge bg="success" className="me-2 px-2 py-1">
-                        🎓 0 Years / Fresher Eligible
+                        🎓 0 years experience
                       </Badge>
                       {job.employmentType && (
                         <Badge bg="secondary" className="px-2 py-1">
@@ -474,7 +474,7 @@ export default function FresherJobs() {
           <Card className="border-0 shadow-sm rounded-4 text-center p-5 my-4">
             <Card.Body>
               <div style={{ fontSize: '3.5rem' }}>🔍</div>
-              <h4 className="fw-bold mt-3">No verified 0-year jobs found for this search.</h4>
+              <h4 className="fw-bold mt-3">No verified fresher jobs are currently available in this search.</h4>
               <p className="text-muted">
                 Try another location, try another keyword, or try another role.
               </p>

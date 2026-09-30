@@ -1,7 +1,9 @@
 package com.jobrecruitment.dto.response;
 
 import com.jobrecruitment.entity.AggregatedJob;
+import com.jobrecruitment.entity.EligibilityStatus;
 import com.jobrecruitment.entity.ExperienceLevel;
+import com.jobrecruitment.entity.LocationClassification;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +17,9 @@ public class FresherJobResponse {
     private String description;
     private String location;
     private String country;
+    private String state;
+    private String city;
+    private LocationClassification locationClassification;
     private String employmentType;
     private ExperienceLevel experienceLevel;
     private String department;
@@ -27,6 +32,10 @@ public class FresherJobResponse {
     private BigDecimal salaryMax;
     private String currency;
     private String skills;
+    private String experienceText;
+    private Integer minimumExperienceYears;
+    private Integer maximumExperienceYears;
+    private EligibilityStatus eligibilityStatus;
     private boolean isFresher;
     private Integer fresherConfidence;
     private boolean isActive;
@@ -45,6 +54,9 @@ public class FresherJobResponse {
         res.description = job.getDescription();
         res.location = job.getLocation();
         res.country = job.getCountry();
+        res.state = job.getState();
+        res.city = job.getCity();
+        res.locationClassification = job.getLocationClassification();
         res.employmentType = job.getEmploymentType();
         res.experienceLevel = job.getExperienceLevel();
         res.department = job.getDepartment();
@@ -57,6 +69,10 @@ public class FresherJobResponse {
         res.salaryMax = job.getSalaryMax();
         res.currency = job.getCurrency();
         res.skills = job.getSkills();
+        res.experienceText = job.getExperienceText();
+        res.minimumExperienceYears = job.getMinimumExperienceYears();
+        res.maximumExperienceYears = job.getMaximumExperienceYears();
+        res.eligibilityStatus = job.getEligibilityStatus();
         res.isFresher = job.isFresher();
         res.fresherConfidence = job.getFresherConfidence();
         res.isActive = job.isActive();
@@ -89,6 +105,15 @@ public class FresherJobResponse {
 
     public String getCountry() { return country; }
     public void setCountry(String country) { this.country = country; }
+
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+
+    public LocationClassification getLocationClassification() { return locationClassification; }
+    public void setLocationClassification(LocationClassification locationClassification) { this.locationClassification = locationClassification; }
 
     public String getEmploymentType() { return employmentType; }
     public void setEmploymentType(String employmentType) { this.employmentType = employmentType; }
@@ -125,6 +150,18 @@ public class FresherJobResponse {
 
     public String getSkills() { return skills; }
     public void setSkills(String skills) { this.skills = skills; }
+
+    public String getExperienceText() { return experienceText; }
+    public void setExperienceText(String experienceText) { this.experienceText = experienceText; }
+
+    public Integer getMinimumExperienceYears() { return minimumExperienceYears; }
+    public void setMinimumExperienceYears(Integer minimumExperienceYears) { this.minimumExperienceYears = minimumExperienceYears; }
+
+    public Integer getMaximumExperienceYears() { return maximumExperienceYears; }
+    public void setMaximumExperienceYears(Integer maximumExperienceYears) { this.maximumExperienceYears = maximumExperienceYears; }
+
+    public EligibilityStatus getEligibilityStatus() { return eligibilityStatus; }
+    public void setEligibilityStatus(EligibilityStatus eligibilityStatus) { this.eligibilityStatus = eligibilityStatus; }
 
     public boolean isFresher() { return isFresher; }
     public void setFresher(boolean fresher) { isFresher = fresher; }

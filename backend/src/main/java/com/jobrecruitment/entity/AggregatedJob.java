@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
     @Index(name = "idx_agg_company_name", columnList = "company_name"),
     @Index(name = "idx_agg_title", columnList = "title"),
     @Index(name = "idx_agg_location", columnList = "location"),
+    @Index(name = "idx_agg_country", columnList = "country"),
+    @Index(name = "idx_agg_loc_class", columnList = "location_classification"),
     @Index(name = "idx_agg_is_active", columnList = "is_active"),
     @Index(name = "idx_agg_is_fresher", columnList = "is_fresher"),
     @Index(name = "idx_agg_posted_at", columnList = "posted_at"),
@@ -44,6 +46,16 @@ public class AggregatedJob {
 
     @Column(length = 100)
     private String country = "India";
+
+    @Column(length = 100)
+    private String state;
+
+    @Column(length = 100)
+    private String city;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "location_classification", length = 30)
+    private LocationClassification locationClassification = LocationClassification.INDIA;
 
     @Column(name = "employment_type", length = 50)
     private String employmentType = "FULL_TIME";
@@ -85,8 +97,14 @@ public class AggregatedJob {
     @Column(length = 500)
     private String skills;
 
+    @Column(name = "experience_text", length = 500)
+    private String experienceText;
+
     @Column(name = "minimum_experience_years")
     private Integer minimumExperienceYears = 0;
+
+    @Column(name = "maximum_experience_years")
+    private Integer maximumExperienceYears;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "eligibility_status", length = 30)
@@ -139,6 +157,9 @@ public class AggregatedJob {
     public String getCompanyName() { return companyName; }
     public void setCompanyName(String companyName) { this.companyName = companyName; }
 
+    public String getCompany() { return companyName; }
+    public void setCompany(String company) { this.companyName = company; }
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
@@ -150,6 +171,15 @@ public class AggregatedJob {
 
     public String getCountry() { return country; }
     public void setCountry(String country) { this.country = country; }
+
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+
+    public LocationClassification getLocationClassification() { return locationClassification; }
+    public void setLocationClassification(LocationClassification locationClassification) { this.locationClassification = locationClassification; }
 
     public String getEmploymentType() { return employmentType; }
     public void setEmploymentType(String employmentType) { this.employmentType = employmentType; }
@@ -190,8 +220,14 @@ public class AggregatedJob {
     public String getSkills() { return skills; }
     public void setSkills(String skills) { this.skills = skills; }
 
+    public String getExperienceText() { return experienceText; }
+    public void setExperienceText(String experienceText) { this.experienceText = experienceText; }
+
     public boolean isFresher() { return isFresher; }
     public void setFresher(boolean fresher) { isFresher = fresher; }
+
+    public boolean isFresherEligible() { return isFresher; }
+    public void setFresherEligible(boolean fresherEligible) { this.isFresher = fresherEligible; }
 
     public Integer getFresherConfidence() { return fresherConfidence; }
     public void setFresherConfidence(Integer fresherConfidence) { this.fresherConfidence = fresherConfidence; }
@@ -205,10 +241,18 @@ public class AggregatedJob {
     public Integer getMinimumExperienceYears() { return minimumExperienceYears; }
     public void setMinimumExperienceYears(Integer minimumExperienceYears) { this.minimumExperienceYears = minimumExperienceYears; }
 
+    public Integer getMaximumExperienceYears() { return maximumExperienceYears; }
+    public void setMaximumExperienceYears(Integer maximumExperienceYears) { this.maximumExperienceYears = maximumExperienceYears; }
+
     public EligibilityStatus getEligibilityStatus() { return eligibilityStatus; }
     public void setEligibilityStatus(EligibilityStatus eligibilityStatus) { this.eligibilityStatus = eligibilityStatus; }
 
+    public EligibilityStatus getExperienceClassification() { return eligibilityStatus; }
+    public void setExperienceClassification(EligibilityStatus status) { this.eligibilityStatus = status; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

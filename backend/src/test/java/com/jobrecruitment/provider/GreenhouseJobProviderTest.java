@@ -1,10 +1,10 @@
 package com.jobrecruitment.provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jobrecruitment.classifier.FresherJobClassifier;
-import com.jobrecruitment.classifier.SkillRelevanceExtractor;
+import com.jobrecruitment.classifier.*;
 import com.jobrecruitment.entity.AggregatedJob;
 import com.jobrecruitment.entity.CompanySource;
+import com.jobrecruitment.entity.EligibilityStatus;
 import com.jobrecruitment.entity.ExperienceLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,10 +18,14 @@ class GreenhouseJobProviderTest {
 
     @BeforeEach
     void setUp() {
+        JobLocationParser locationParser = new JobLocationParser();
+        ExperienceRequirementParser experienceParser = new ExperienceRequirementParser();
+        FresherJobEligibilityService eligibilityService = new FresherJobEligibilityService(locationParser, experienceParser);
+
         provider = new GreenhouseJobProvider(
                 new ObjectMapper(),
+                eligibilityService,
                 new FresherJobClassifier(),
-                new com.jobrecruitment.classifier.FresherEligibilityService(new com.jobrecruitment.classifier.ExperienceRequirementParser()),
                 new SkillRelevanceExtractor()
         );
     }
@@ -45,13 +49,13 @@ class GreenhouseJobProviderTest {
         raw.setSourceJobId("8142329");
         raw.setSourceProvider("GREENHOUSE");
         raw.setTitle("Graduate Software Engineer, Open Source and Linux");
-        raw.setDescription("Join our team. Experience: recent graduate with knowledge of Java, Spring Boot, and Linux.");
-        raw.setLocation("Home based - Worldwide");
+        raw.setDescription("Join our team. Experience: recent graduate with 0 years experience and knowledge of Java, Spring Boot, and Linux.");
+        raw.setLocation("Bengaluru, Karnataka, India");
         raw.setCountry("India");
         raw.setDepartment("Engineering");
         raw.setApplicationUrl("https://job-boards.greenhouse.io/canonical/jobs/8142329");
         raw.setSourceUrl("https://job-boards.greenhouse.io/canonical/jobs/8142329");
-        raw.setRemote(true);
+        raw.setRemote(false);
 
         AggregatedJob normalized = provider.normalize(raw, source);
 
@@ -60,7 +64,7 @@ class GreenhouseJobProviderTest {
         assertEquals("Graduate Software Engineer, Open Source and Linux", normalized.getTitle());
         assertEquals("https://job-boards.greenhouse.io/canonical/jobs/8142329", normalized.getApplicationUrl());
         assertTrue(normalized.isFresher());
-        assertEquals(com.jobrecruitment.entity.EligibilityStatus.ELIGIBLE_ZERO_YEAR, normalized.getEligibilityStatus());
+        assertEquals(EligibilityStatus.ELIGIBLE_ZERO_YEAR, normalized.getEligibilityStatus());
         assertEquals(0, normalized.getMinimumExperienceYears());
         assertEquals(ExperienceLevel.FRESHER, normalized.getExperienceLevel());
         assertTrue(normalized.isActive());

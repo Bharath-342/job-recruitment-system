@@ -1,10 +1,10 @@
 package com.jobrecruitment.provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jobrecruitment.classifier.FresherJobClassifier;
-import com.jobrecruitment.classifier.SkillRelevanceExtractor;
+import com.jobrecruitment.classifier.*;
 import com.jobrecruitment.entity.AggregatedJob;
 import com.jobrecruitment.entity.CompanySource;
+import com.jobrecruitment.entity.EligibilityStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,10 +17,14 @@ class LeverJobProviderTest {
 
     @BeforeEach
     void setUp() {
+        JobLocationParser locationParser = new JobLocationParser();
+        ExperienceRequirementParser experienceParser = new ExperienceRequirementParser();
+        FresherJobEligibilityService eligibilityService = new FresherJobEligibilityService(locationParser, experienceParser);
+
         provider = new LeverJobProvider(
                 new ObjectMapper(),
+                eligibilityService,
                 new FresherJobClassifier(),
-                new com.jobrecruitment.classifier.FresherEligibilityService(new com.jobrecruitment.classifier.ExperienceRequirementParser()),
                 new SkillRelevanceExtractor()
         );
     }
@@ -36,7 +40,7 @@ class LeverJobProviderTest {
     @Test
     @DisplayName("Normalize Lever job and preserve application URL")
     void testNormalize() {
-        CompanySource source = new CompanySource("Palantir", "https://palantir.com/careers", "LEVER", "palantir", "Global");
+        CompanySource source = new CompanySource("Palantir", "https://palantir.com/careers", "LEVER", "palantir", "India");
         source.setId(2L);
 
         RawJobDto raw = new RawJobDto();
@@ -56,7 +60,7 @@ class LeverJobProviderTest {
         assertEquals("Palantir", job.getCompanyName());
         assertEquals("https://jobs.lever.co/palantir/lever-999", job.getApplicationUrl());
         assertTrue(job.isFresher());
-        assertEquals(com.jobrecruitment.entity.EligibilityStatus.ELIGIBLE_ZERO_YEAR, job.getEligibilityStatus());
+        assertEquals(EligibilityStatus.ELIGIBLE_ZERO_YEAR, job.getEligibilityStatus());
         assertEquals(0, job.getMinimumExperienceYears());
         assertTrue(job.getSkills().contains("Java"));
     }

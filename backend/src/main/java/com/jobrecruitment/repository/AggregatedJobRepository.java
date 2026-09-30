@@ -1,6 +1,8 @@
 package com.jobrecruitment.repository;
 
 import com.jobrecruitment.entity.AggregatedJob;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -22,31 +24,41 @@ public interface AggregatedJobRepository extends JpaRepository<AggregatedJob, Lo
 
     List<AggregatedJob> findBySourceProvider(String sourceProvider);
 
-    @Query("SELECT COUNT(j) FROM AggregatedJob j WHERE j.isActive = true AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0")
+    // Strict India + Strict 0-Year Fresher Count Queries
+    @Query("SELECT COUNT(j) FROM AggregatedJob j WHERE j.isActive = true AND (LOWER(j.country) = 'india' OR j.locationClassification = 'INDIA') AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0")
     long countStrictFresherJobs();
 
-    @Query("SELECT COUNT(DISTINCT j.companyName) FROM AggregatedJob j WHERE j.isActive = true AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0")
+    @Query("SELECT COUNT(DISTINCT j.companyName) FROM AggregatedJob j WHERE j.isActive = true AND (LOWER(j.country) = 'india' OR j.locationClassification = 'INDIA') AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0")
     long countDistinctCompaniesHiringFreshers();
 
-    @Query("SELECT COUNT(DISTINCT j.location) FROM AggregatedJob j WHERE j.isActive = true AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0 AND j.location IS NOT NULL")
+    @Query("SELECT COUNT(DISTINCT j.location) FROM AggregatedJob j WHERE j.isActive = true AND (LOWER(j.country) = 'india' OR j.locationClassification = 'INDIA') AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0 AND j.location IS NOT NULL")
     long countDistinctLocationsHiringFreshers();
 
-    @Query("SELECT COUNT(j) FROM AggregatedJob j WHERE j.isActive = true AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0 AND j.remote = true")
+    @Query("SELECT COUNT(j) FROM AggregatedJob j WHERE j.isActive = true AND (LOWER(j.country) = 'india' OR j.locationClassification = 'INDIA') AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0 AND j.remote = true")
     long countStrictRemoteFresherJobs();
 
-    @Query("SELECT DISTINCT j.companyName FROM AggregatedJob j WHERE j.isActive = true AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0 ORDER BY j.companyName ASC")
+    @Query("SELECT DISTINCT j.companyName FROM AggregatedJob j WHERE j.isActive = true AND (LOWER(j.country) = 'india' OR j.locationClassification = 'INDIA') AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0 ORDER BY j.companyName ASC")
     List<String> findDistinctCompaniesHiringFreshers();
 
-    @Query("SELECT DISTINCT j.location FROM AggregatedJob j WHERE j.isActive = true AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0 AND j.location IS NOT NULL ORDER BY j.location ASC")
+    @Query("SELECT DISTINCT j.location FROM AggregatedJob j WHERE j.isActive = true AND (LOWER(j.country) = 'india' OR j.locationClassification = 'INDIA') AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0 AND j.location IS NOT NULL ORDER BY j.location ASC")
     List<String> findDistinctLocationsHiringFreshers();
 
-    @Query("SELECT MAX(j.lastVerifiedAt) FROM AggregatedJob j WHERE j.isActive = true AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0")
+    @Query("SELECT MAX(j.lastVerifiedAt) FROM AggregatedJob j WHERE j.isActive = true AND (LOWER(j.country) = 'india' OR j.locationClassification = 'INDIA') AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0")
     LocalDateTime findLatestVerificationTimestamp();
 
     @Query("SELECT new com.jobrecruitment.dto.response.CompanyDirectoryItemDto(j.companyName, COUNT(j.id), MAX(j.lastVerifiedAt)) " +
            "FROM AggregatedJob j " +
-           "WHERE j.isActive = true AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0 " +
+           "WHERE j.isActive = true AND (LOWER(j.country) = 'india' OR j.locationClassification = 'INDIA') AND j.eligibilityStatus = 'ELIGIBLE_ZERO_YEAR' AND j.minimumExperienceYears = 0 " +
            "GROUP BY j.companyName ORDER BY COUNT(j.id) DESC")
-    org.springframework.data.domain.Page<com.jobrecruitment.dto.response.CompanyDirectoryItemDto> findCompaniesHiringFreshers(
-            org.springframework.data.domain.Pageable pageable);
+    Page<com.jobrecruitment.dto.response.CompanyDirectoryItemDto> findCompaniesHiringFreshers(Pageable pageable);
+
+    // Audit queries for validation
+    @Query("SELECT COUNT(j) FROM AggregatedJob j WHERE j.isActive = true AND j.isFresher = true AND j.minimumExperienceYears > 0")
+    long countActiveFresherWithExperienceGreaterThanZero();
+
+    @Query("SELECT COUNT(j) FROM AggregatedJob j WHERE j.isActive = true AND j.isFresher = true AND j.eligibilityStatus = 'UNKNOWN'")
+    long countActiveFresherWithUnknownExperience();
+
+    @Query("SELECT COUNT(j) FROM AggregatedJob j WHERE j.isActive = true AND j.isFresher = true AND (LOWER(j.country) != 'india' AND j.locationClassification != 'INDIA')")
+    long countActiveFresherOutsideIndia();
 }

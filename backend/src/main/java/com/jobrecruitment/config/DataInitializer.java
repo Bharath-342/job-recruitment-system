@@ -1,5 +1,7 @@
 package com.jobrecruitment.config;
 
+import com.jobrecruitment.classifier.ExperienceRequirementParser;
+import com.jobrecruitment.classifier.JobLocationParser;
 import com.jobrecruitment.entity.*;
 import com.jobrecruitment.repository.*;
 import org.slf4j.Logger;
@@ -28,6 +30,9 @@ public class DataInitializer implements CommandLineRunner {
     private final SkillRepository skillRepository;
     private final PasswordEncoder passwordEncoder;
     private final CompanySourceRepository companySourceRepository;
+    private final AggregatedJobRepository aggregatedJobRepository;
+    private final JobLocationParser locationParser;
+    private final ExperienceRequirementParser experienceParser;
     private final com.jobrecruitment.service.JobAggregationService jobAggregationService;
 
     public DataInitializer(UserRepository userRepository,
@@ -38,6 +43,9 @@ public class DataInitializer implements CommandLineRunner {
                            SkillRepository skillRepository,
                            PasswordEncoder passwordEncoder,
                            CompanySourceRepository companySourceRepository,
+                           AggregatedJobRepository aggregatedJobRepository,
+                           JobLocationParser locationParser,
+                           ExperienceRequirementParser experienceParser,
                            com.jobrecruitment.service.JobAggregationService jobAggregationService) {
         this.userRepository = userRepository;
         this.candidateProfileRepository = candidateProfileRepository;
@@ -47,6 +55,9 @@ public class DataInitializer implements CommandLineRunner {
         this.skillRepository = skillRepository;
         this.passwordEncoder = passwordEncoder;
         this.companySourceRepository = companySourceRepository;
+        this.aggregatedJobRepository = aggregatedJobRepository;
+        this.locationParser = locationParser;
+        this.experienceParser = experienceParser;
         this.jobAggregationService = jobAggregationService;
     }
 
@@ -133,7 +144,7 @@ public class DataInitializer implements CommandLineRunner {
             candidateUser = userRepository.findByEmail("candidate@dev.com").get();
         }
 
-        // 5. Seed sample jobs if no jobs exist
+        // 5. Seed sample recruiter jobs if no jobs exist
         if (jobRepository.count() == 0) {
             Job job1 = new Job();
             job1.setTitle("Senior Java Full Stack Developer");
@@ -211,7 +222,7 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // 7. Seed official verified company sources for Fresher Job Aggregation (30+ verified companies)
+        // 7. Seed curated verified company sources with active India hiring
         List<CompanySource> defaultSources = List.of(
             new CompanySource("Canonical", "https://canonical.com/careers", "GREENHOUSE", "canonical", "India"),
             new CompanySource("ThoughtWorks", "https://www.thoughtworks.com/careers", "GREENHOUSE", "thoughtworks", "India"),
@@ -223,28 +234,8 @@ public class DataInitializer implements CommandLineRunner {
             new CompanySource("Elastic", "https://jobs.elastic.co", "GREENHOUSE", "elastic", "India"),
             new CompanySource("Stripe", "https://stripe.com/jobs", "GREENHOUSE", "stripe", "India"),
             new CompanySource("Cloudflare", "https://www.cloudflare.com/careers", "GREENHOUSE", "cloudflare", "India"),
-            new CompanySource("GitLab", "https://about.gitlab.com/jobs", "GREENHOUSE", "gitlab", "Global"),
-            new CompanySource("Figma", "https://www.figma.com/careers", "GREENHOUSE", "figma", "Global"),
-            new CompanySource("Coinbase", "https://www.coinbase.com/careers", "GREENHOUSE", "coinbase", "Global"),
             new CompanySource("Twilio", "https://www.twilio.com/company/jobs", "GREENHOUSE", "twilio", "India"),
-            new CompanySource("Samsara", "https://www.samsara.com/careers", "GREENHOUSE", "samsara", "Global"),
-            new CompanySource("Databricks", "https://www.databricks.com/company/careers", "GREENHOUSE", "databricks", "Global"),
-            new CompanySource("Okta", "https://www.okta.com/company/careers", "GREENHOUSE", "okta", "Global"),
-            new CompanySource("Pinterest", "https://www.pinterestcareers.com", "GREENHOUSE", "pinterest", "Global"),
-            new CompanySource("Brex", "https://www.brex.com/careers", "GREENHOUSE", "brex", "Global"),
-            new CompanySource("Reddit", "https://www.redditinc.com/careers", "GREENHOUSE", "reddit", "Global"),
-            new CompanySource("Affirm", "https://www.affirm.com/careers", "GREENHOUSE", "affirm", "Global"),
-            new CompanySource("Discord", "https://discord.com/careers", "GREENHOUSE", "discord", "Global"),
-            new CompanySource("Miro", "https://miro.com/careers", "GREENHOUSE", "miro", "Global"),
-            new CompanySource("Toast", "https://careers.toasttab.com", "GREENHOUSE", "toasttab", "India"),
-            new CompanySource("HashiCorp", "https://www.hashicorp.com/careers", "GREENHOUSE", "hashicorp", "Global"),
-            new CompanySource("Palantir", "https://www.palantir.com/careers", "LEVER", "palantir", "Global"),
-            new CompanySource("Spotify", "https://www.lifeatspotify.com", "LEVER", "spotify", "Global"),
-            new CompanySource("Netflix", "https://jobs.netflix.com", "LEVER", "netflix", "Global"),
-            new CompanySource("Canva", "https://www.lifeatcanva.com", "LEVER", "canva", "Global"),
-            new CompanySource("Sentry", "https://sentry.io/careers", "ASHBY", "sentry", "Global"),
-            new CompanySource("Ramp", "https://ramp.com/careers", "ASHBY", "ramp", "Global"),
-            new CompanySource("Linear", "https://linear.app/careers", "ASHBY", "linear", "Global")
+            new CompanySource("Toast", "https://careers.toasttab.com", "GREENHOUSE", "toasttab", "India")
         );
 
         for (CompanySource src : defaultSources) {
@@ -253,11 +244,62 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // Trigger initial live synchronization in background after full startup stabilization
-        // 90s delay allows Render's free-tier container to pass health checks and stabilize before heavy sync begins
+        // 8. Disable foreign-only sources that may have been seeded previously
+        List<String> foreignIdentifiers = List.of(
+            "gitlab", "figma", "coinbase", "samsara", "databricks", "okta",
+            "pinterest", "brex", "reddit", "affirm", "discord", "miro",
+            "hashicorp", "palantir", "spotify", "netflix", "canva",
+            "sentry", "ramp", "linear"
+        );
+        for (String fid : foreignIdentifiers) {
+            companySourceRepository.findAll().stream()
+                .filter(s -> fid.equalsIgnoreCase(s.getProviderIdentifier()))
+                .forEach(s -> {
+                    s.setEnabled(false);
+                    companySourceRepository.save(s);
+                });
+        }
+
+        // 9. Retroactive Audit & Rectification on existing aggregated jobs in database
+        // Re-evaluates all historical jobs with the strict parsers to ensure ZERO foreign or experienced jobs remain active.
+        log.info("Running retroactive audit and rectification on existing aggregated jobs...");
+        List<AggregatedJob> allExisting = aggregatedJobRepository.findAll();
+        int rectifiedCount = 0;
+        for (AggregatedJob job : allExisting) {
+            JobLocationParser.ParsedLocation loc = locationParser.parse(job.getLocation(), job.getTitle(), job.getDescription());
+            ExperienceRequirementParser.ParsedExperience exp = experienceParser.parse(job.getTitle(), job.getDescription());
+
+            job.setCountry(loc.country());
+            job.setState(loc.state());
+            job.setCity(loc.city());
+            job.setLocationClassification(loc.classification());
+            job.setRemote(loc.isRemote());
+
+            job.setEligibilityStatus(exp.experienceClassification());
+            job.setMinimumExperienceYears(exp.minimumExperienceYears());
+            job.setMaximumExperienceYears(exp.maximumExperienceYears());
+            job.setExperienceText(exp.experienceText());
+
+            boolean isIndia = loc.classification() == LocationClassification.INDIA;
+            boolean isZeroYear = exp.experienceClassification() == EligibilityStatus.ELIGIBLE_ZERO_YEAR;
+
+            if (!isIndia || !isZeroYear) {
+                job.setFresher(false);
+                if (!isIndia) {
+                    job.setActive(false);
+                }
+                rectifiedCount++;
+            } else {
+                job.setFresher(true);
+            }
+            aggregatedJobRepository.save(job);
+        }
+        log.info("Completed retroactive audit. Inspected {} jobs, updated/rectified {}.", allExisting.size(), rectifiedCount);
+
+        // 10. Background synchronization after startup stabilization
         new Thread(() -> {
             try {
-                Thread.sleep(90_000);
+                Thread.sleep(60_000);
                 log.info("Starting initial job synchronization after startup delay...");
                 jobAggregationService.syncAllSources();
             } catch (Exception e) {

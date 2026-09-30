@@ -3,7 +3,9 @@ package com.jobrecruitment.service;
 import com.jobrecruitment.dto.response.*;
 import com.jobrecruitment.entity.AggregatedJob;
 import com.jobrecruitment.entity.CompanySource;
+import com.jobrecruitment.entity.EligibilityStatus;
 import com.jobrecruitment.entity.ExperienceLevel;
+import com.jobrecruitment.entity.LocationClassification;
 import com.jobrecruitment.exception.ResourceNotFoundException;
 import com.jobrecruitment.provider.JobProviderFactory;
 import com.jobrecruitment.provider.JobSourceProvider;
@@ -41,7 +43,7 @@ public class JobAggregationService {
     }
 
     /**
-     * Search fresher jobs with multi-criteria filtering and database-level pagination.
+     * Search fresher jobs with strict India + strict 0-year filtering and database-level pagination.
      */
     @Transactional(readOnly = true)
     public Page<FresherJobResponse> searchFresherJobs(
@@ -61,7 +63,7 @@ public class JobAggregationService {
     }
 
     /**
-     * General unified search across all aggregated jobs (including all experience levels).
+     * General unified search across all aggregated jobs.
      */
     @Transactional(readOnly = true)
     public Page<FresherJobResponse> searchAllAggregatedJobs(
@@ -144,9 +146,9 @@ public class JobAggregationService {
     }
 
     /**
-     * Scheduled synchronization running at configurable intervals (default: 4 hours).
+     * Scheduled synchronization running at configurable intervals (default: 6 hours).
      */
-    @Scheduled(fixedDelayString = "${job.sync.interval:14400000}", initialDelay = 60000)
+    @Scheduled(fixedDelayString = "${job.sync.interval:21600000}", initialDelay = 60000)
     public void scheduledSync() {
         log.info("Starting scheduled fresher job synchronization...");
         syncAllSources();
@@ -171,7 +173,7 @@ public class JobAggregationService {
                 summary.setSourcesFailed(summary.getSourcesFailed() + 1);
                 updateSourceError(source, e.getMessage());
             }
-            // Small delay between sources to reduce memory pressure on free-tier (512MB) containers
+            // Small delay between sources to reduce memory pressure on free-tier containers
             try { Thread.sleep(1500); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
         }
 
@@ -228,10 +230,19 @@ public class JobAggregationService {
 
             if (normalized.isFresher()) {
                 fresherCount++;
-            } else if (normalized.getEligibilityStatus() == com.jobrecruitment.entity.EligibilityStatus.NOT_ELIGIBLE) {
-                summary.setJobsRejectedExperienceGreaterThanZero(summary.getJobsRejectedExperienceGreaterThanZero() + 1);
             } else {
-                summary.setJobsRejectedExperienceUnknown(summary.getJobsRejectedExperienceUnknown() + 1);
+                // Audit rejection tracking
+                if (normalized.getLocationClassification() == LocationClassification.NON_INDIA) {
+                    summary.setJobsRejectedForeign(summary.getJobsRejectedForeign() + 1);
+                } else if (normalized.getLocationClassification() == LocationClassification.UNKNOWN) {
+                    summary.setJobsRejectedLocationUnknown(summary.getJobsRejectedLocationUnknown() + 1);
+                }
+
+                if (normalized.getEligibilityStatus() == EligibilityStatus.NOT_ELIGIBLE) {
+                    summary.setJobsRejectedExperienceGreaterThanZero(summary.getJobsRejectedExperienceGreaterThanZero() + 1);
+                } else if (normalized.getEligibilityStatus() == EligibilityStatus.UNKNOWN) {
+                    summary.setJobsRejectedExperienceUnknown(summary.getJobsRejectedExperienceUnknown() + 1);
+                }
             }
 
             // Deduplication strategy
@@ -256,6 +267,9 @@ public class JobAggregationService {
                 existing.setDescription(normalized.getDescription());
                 existing.setLocation(normalized.getLocation());
                 existing.setCountry(normalized.getCountry());
+                existing.setState(normalized.getState());
+                existing.setCity(normalized.getCity());
+                existing.setLocationClassification(normalized.getLocationClassification());
                 existing.setDepartment(normalized.getDepartment());
                 existing.setEmploymentType(normalized.getEmploymentType());
                 existing.setApplicationUrl(normalized.getApplicationUrl());
@@ -265,6 +279,8 @@ public class JobAggregationService {
                 existing.setFresher(normalized.isFresher());
                 existing.setEligibilityStatus(normalized.getEligibilityStatus());
                 existing.setMinimumExperienceYears(normalized.getMinimumExperienceYears());
+                existing.setMaximumExperienceYears(normalized.getMaximumExperienceYears());
+                existing.setExperienceText(normalized.getExperienceText());
                 existing.setFresherConfidence(normalized.getFresherConfidence());
                 existing.setSkills(normalized.getSkills());
                 existing.setActive(true);
