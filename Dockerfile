@@ -32,7 +32,6 @@ WORKDIR /app
 
 COPY --from=backend-builder /app/backend/target/job-recruitment-backend-1.0.0.jar app.jar
 
-EXPOSE 8080
-ENV SERVER_PORT=8080
+EXPOSE 8080 10000
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
