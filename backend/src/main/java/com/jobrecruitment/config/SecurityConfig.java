@@ -52,6 +52,7 @@ public class SecurityConfig {
                 .requestMatchers(request -> !request.getRequestURI().startsWith("/api")).permitAll()
                 // Public API endpoints
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/jobs/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 // Candidate endpoints

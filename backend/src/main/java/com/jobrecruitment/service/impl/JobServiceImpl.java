@@ -96,11 +96,13 @@ public class JobServiceImpl implements JobService {
             }
         }
 
-        String kw = (keyword != null && !keyword.isBlank()) ? keyword : null;
-        String loc = (location != null && !location.isBlank()) ? location : null;
+        String kw = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        String loc = (location != null && !location.isBlank()) ? location.trim() : null;
 
-        return jobRepository.searchJobs(kw, loc, empType, experience, salaryMin, pageable)
-                .map(EntityMapper::toJobResponse);
+        return jobRepository.findAll(
+                JobSpecifications.filterJobs(kw, loc, empType, experience, salaryMin),
+                pageable
+        ).map(EntityMapper::toJobResponse);
     }
 
     @Override
