@@ -21,8 +21,11 @@ export default function Home() {
             Connect with top employers and discover opportunities that match your skills
           </p>
           <div className="d-flex gap-3 justify-content-center flex-wrap">
+            <Button as={Link} to="/fresher-jobs" variant="warning" size="lg" className="px-4 fw-bold shadow text-dark">
+              ⚡ Real-Time Fresher Jobs
+            </Button>
             <Button as={Link} to="/jobs" variant="light" size="lg" className="px-4 fw-semibold">
-              <FaSearch className="me-2" />Browse Jobs
+              <FaSearch className="me-2" />Browse All Jobs
             </Button>
             {!isAuthenticated() && (
               <Button as={Link} to="/register/candidate" variant="outline-light" size="lg" className="px-4">

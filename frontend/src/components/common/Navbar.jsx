@@ -31,6 +31,10 @@ export default function Navbar() {
         <BSNavbar.Collapse>
           <Nav className="me-auto">
             <Nav.Link as={Link} to="/jobs">Browse Jobs</Nav.Link>
+            <Nav.Link as={Link} to="/fresher-jobs" className="fw-bold text-warning d-flex align-items-center gap-1">
+              <span>Fresher Jobs</span>
+              <Badge bg="warning" text="dark" pill style={{ fontSize: '0.65rem' }}>LIVE</Badge>
+            </Nav.Link>
             {isAuthenticated() && (
               <Nav.Link as={Link} to={getDashboardLink()}>Dashboard</Nav.Link>
             )}

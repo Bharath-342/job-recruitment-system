@@ -67,6 +67,7 @@ public class SecurityConfig {
                 // Job deletion (Recruiter or Admin)
                 .requestMatchers(HttpMethod.DELETE, "/api/jobs/**").hasAnyRole("RECRUITER", "ADMIN")
                 // Admin endpoints
+                .requestMatchers(HttpMethod.POST, "/api/jobs/sync").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // All other API endpoints require authentication
                 .anyRequest().authenticated()

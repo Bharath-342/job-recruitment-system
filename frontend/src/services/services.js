@@ -48,3 +48,13 @@ export const adminService = {
   removeJob: (id) => api.delete(`/admin/jobs/${id}`),
   getStatistics: () => api.get('/admin/statistics'),
 };
+
+export const fresherJobService = {
+  getFresherJobs: (params) => api.get('/jobs/fresher', { params }),
+  searchAllAggregated: (params) => api.get('/jobs/search', { params }),
+  getFresherJob: (id) => api.get(`/jobs/fresher/${id}`),
+  getStatistics: () => api.get('/jobs/statistics'),
+  getCompanies: () => api.get('/jobs/companies'),
+  getSources: () => api.get('/jobs/sources'),
+  triggerSync: (sourceId) => api.post('/jobs/sync', null, { params: { sourceId } }),
+};

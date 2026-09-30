@@ -23,6 +23,8 @@ public class DataInitializer implements CommandLineRunner {
     private final ApplicationRepository applicationRepository;
     private final SkillRepository skillRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CompanySourceRepository companySourceRepository;
+    private final com.jobrecruitment.service.JobAggregationService jobAggregationService;
 
     public DataInitializer(UserRepository userRepository,
                            CandidateProfileRepository candidateProfileRepository,
@@ -30,7 +32,9 @@ public class DataInitializer implements CommandLineRunner {
                            JobRepository jobRepository,
                            ApplicationRepository applicationRepository,
                            SkillRepository skillRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           CompanySourceRepository companySourceRepository,
+                           com.jobrecruitment.service.JobAggregationService jobAggregationService) {
         this.userRepository = userRepository;
         this.candidateProfileRepository = candidateProfileRepository;
         this.recruiterProfileRepository = recruiterProfileRepository;
@@ -38,6 +42,8 @@ public class DataInitializer implements CommandLineRunner {
         this.applicationRepository = applicationRepository;
         this.skillRepository = skillRepository;
         this.passwordEncoder = passwordEncoder;
+        this.companySourceRepository = companySourceRepository;
+        this.jobAggregationService = jobAggregationService;
     }
 
     @Override
@@ -199,6 +205,37 @@ public class DataInitializer implements CommandLineRunner {
                 app.setRecruiterNotes("Strong Java and React background. Reviewed GitHub portfolio.");
                 applicationRepository.save(app);
             }
+        }
+
+        // 7. Seed official verified company sources for Fresher Job Aggregation
+        if (companySourceRepository.count() == 0) {
+            List<CompanySource> sources = List.of(
+                new CompanySource("Canonical", "https://canonical.com/careers", "GREENHOUSE", "canonical", "India"),
+                new CompanySource("ThoughtWorks", "https://www.thoughtworks.com/careers", "GREENHOUSE", "thoughtworks", "India"),
+                new CompanySource("InMobi", "https://www.inmobi.com/company/careers", "GREENHOUSE", "inmobi", "India"),
+                new CompanySource("Groww", "https://groww.in/careers", "GREENHOUSE", "groww", "India"),
+                new CompanySource("Rubrik", "https://www.rubrik.com/company/careers", "GREENHOUSE", "rubrik", "India"),
+                new CompanySource("MongoDB", "https://www.mongodb.com/careers", "GREENHOUSE", "mongodb", "India"),
+                new CompanySource("Datadog", "https://careers.datadoghq.com", "GREENHOUSE", "datadog", "India"),
+                new CompanySource("Elastic", "https://jobs.elastic.co", "GREENHOUSE", "elastic", "India"),
+                new CompanySource("Stripe", "https://stripe.com/jobs", "GREENHOUSE", "stripe", "India"),
+                new CompanySource("Cloudflare", "https://www.cloudflare.com/careers", "GREENHOUSE", "cloudflare", "India"),
+                new CompanySource("Palantir", "https://www.palantir.com/careers", "LEVER", "palantir", "Global"),
+                new CompanySource("Spotify", "https://www.lifeatspotify.com", "LEVER", "spotify", "Global"),
+                new CompanySource("Sentry", "https://sentry.io/careers", "ASHBY", "sentry", "Global"),
+                new CompanySource("Ramp", "https://ramp.com/careers", "ASHBY", "ramp", "Global")
+            );
+            companySourceRepository.saveAll(sources);
+
+            // Trigger initial live synchronization in background
+            new Thread(() -> {
+                try {
+                    Thread.sleep(3000);
+                    jobAggregationService.syncAllSources();
+                } catch (Exception e) {
+                    // Handled internally in aggregation service
+                }
+            }).start();
         }
     }
 

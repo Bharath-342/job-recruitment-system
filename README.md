@@ -9,12 +9,13 @@ The system facilitates end-to-end recruitment workflows supporting three distinc
 ## 🚀 Key Highlights & Architectural Strengths
 
 - **Layered Clean Architecture**: Strict separation of concerns (Controller ➔ Service ➔ Repository ➔ Entity / DTO Projections).
+- **⚡ Real-Time Fresher Job Aggregator**: Automated ingestion from official company ATS feeds (Greenhouse, Lever, Ashby) with heuristic Fresher Classification, Java/Full Stack relevance matching, and direct redirection to official company application pages.
 - **Stateless Authentication & RBAC**: JWT (HMAC-SHA384) with Spring Security 6 filter chain, role-based URL guards, and method security.
 - **Relational Integrity & Normalization**: MySQL 8 database schema designed with foreign keys, composite indexes (`idx_job_title`, `idx_job_location`, `idx_job_status`), and duplicate application prevention at both database and service layers.
 - **Server-Side Pagination & Dynamic Filtering**: Full server-side search across keyword, location, employment type, experience, and salary range.
 - **Multi-Status Recruitment Pipeline**: Strict validation of candidate recruitment workflow transitions (`APPLIED` ➔ `UNDER_REVIEW` ➔ `SHORTLISTED` ➔ `INTERVIEW` ➔ `SELECTED` / `REJECTED`).
 - **Secure File Storage**: Resume upload and secure download with MIME validation and filename sanitization.
-- **Robust Automated Testing**: 39 test suites (unit tests with JUnit 5 & Mockito + full Spring Boot integration tests with MockMvc and H2).
+- **Robust Automated Testing**: Comprehensive unit tests (Fresher classifier, ATS normalizers, duplicate detection, failure isolation) + full Spring Boot integration tests.
 - **Interactive API Documentation**: OpenAPI 3.0 & Swagger UI integrated.
 
 ---
@@ -72,6 +73,22 @@ The system facilitates end-to-end recruitment workflows supporting three distinc
 - **Account Moderation**: Activate or deactivate rogue users instantly.
 - **Job Moderation**: Delete inappropriate or spam job postings system-wide.
 - **System Telemetry**: System dashboard showing active user count, job count, total applications, and placement metrics.
+
+### 4. ⚡ Real-Time Fresher & Entry-Level Job Aggregator
+- **Automated Public ATS Feeds**: Direct ingestion from official company career boards (Greenhouse, Lever, Ashby). No fake listings, no middlemen.
+- **FresherJobClassifier Engine**: Multi-factor heuristic classifier analyzing titles, descriptions, and experience requirements:
+  - Positive signals: `Fresher`, `Graduate`, `0-1 yrs`, `0-2 yrs`, `Entry-Level`, `Associate`, `Trainee`, `Campus`.
+  - Negative signals: `Senior`, `Lead`, `Principal`, `Architect`, `5+ yrs`, `7+ yrs`. Hard exclusion regardless of title.
+- **Java & Full Stack Relevance**: Automated extraction and tagging for `Java`, `Spring Boot`, `React`, `SQL`, `Microservices`, `REST API`, `Docker`, `Git`.
+- **Deduplication & Expiry Tracking**: Deduplication by `sourceProvider + externalJobId` and `company + title + location`. Unlisted jobs automatically marked `isActive = false`.
+- **Direct Official Redirection**: Every job card provides a direct link to the company's official application page (`applicationUrl`).
+- **REST API Endpoints**:
+  - `GET /api/jobs/fresher` (Search with keyword, location, role, company, remote, pagination)
+  - `GET /api/jobs/search` (Unified search across all aggregated listings)
+  - `GET /api/jobs/statistics` (Verified counts of active fresher jobs, unique hiring companies, locations)
+  - `GET /api/jobs/companies` (Unique companies currently hiring freshers)
+  - `GET /api/jobs/sources` (Configured company sources and synchronization telemetry)
+  - `POST /api/jobs/sync` (Admin-authorized manual synchronization trigger)
 
 ---
 

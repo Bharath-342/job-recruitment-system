@@ -14,6 +14,8 @@ public class SpaWebController {
         "/register",
         "/jobs",
         "/jobs/**",
+        "/fresher-jobs",
+        "/fresher-jobs/**",
         "/candidate/**",
         "/recruiter/**",
         "/admin/**",
