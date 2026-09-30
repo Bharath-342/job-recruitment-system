@@ -2,7 +2,7 @@ services:
   - type: web
     name: job-recruitment-system
     env: docker
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./Dockerfile
     plan: free
     region: oregon
     healthCheckPath: /api/jobs
@@ -11,14 +11,6 @@ services:
         fromDatabase:
           name: ats-db
           property: connectionString
-      - key: DB_USERNAME
-        fromDatabase:
-          name: ats-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: ats-db
-          property: password
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
