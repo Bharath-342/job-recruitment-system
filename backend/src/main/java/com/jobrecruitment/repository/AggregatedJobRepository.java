@@ -15,7 +15,7 @@ public interface AggregatedJobRepository extends JpaRepository<AggregatedJob, Lo
 
     Optional<AggregatedJob> findBySourceProviderAndExternalJobId(String sourceProvider, String externalJobId);
 
-    Optional<AggregatedJob> findByCompanyNameIgnoreCaseAndTitleIgnoreCaseAndLocationIgnoreCase(
+    List<AggregatedJob> findByCompanyNameIgnoreCaseAndTitleIgnoreCaseAndLocationIgnoreCase(
             String companyName, String title, String location);
 
     List<AggregatedJob> findByCompanyId(Long companyId);

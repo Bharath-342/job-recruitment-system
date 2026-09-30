@@ -34,4 +34,10 @@ COPY --from=backend-builder /app/backend/target/job-recruitment-backend-1.0.0.ja
 
 EXPOSE 8080 10000
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", \
+  "-Xmx256m", \
+  "-Xms64m", \
+  "-XX:+UseContainerSupport", \
+  "-XX:MaxRAMPercentage=60.0", \
+  "-XX:+ExitOnOutOfMemoryError", \
+  "-jar", "app.jar"]

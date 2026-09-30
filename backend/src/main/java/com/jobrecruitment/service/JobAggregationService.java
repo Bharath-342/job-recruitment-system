@@ -171,6 +171,8 @@ public class JobAggregationService {
                 summary.setSourcesFailed(summary.getSourcesFailed() + 1);
                 updateSourceError(source, e.getMessage());
             }
+            // Small delay between sources to reduce memory pressure on free-tier (512MB) containers
+            try { Thread.sleep(1500); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
         }
 
         log.info("Sync completed: Processed={}, Successful={}, Failed={}, JobsFound={}, Inserted={}, Updated={}, Deactivated={}, Freshers={}",
@@ -237,12 +239,13 @@ public class JobAggregationService {
             Optional<AggregatedJob> existingOpt = aggregatedJobRepository
                     .findBySourceProviderAndExternalJobId(normalized.getSourceProvider(), normalized.getExternalJobId());
 
-            // 2. Fallback deduplication by company + title + location
+            // 2. Fallback deduplication by company + title + location (returns List to avoid unique-result crash)
             if (existingOpt.isEmpty()) {
-                existingOpt = aggregatedJobRepository
+                List<AggregatedJob> matches = aggregatedJobRepository
                         .findByCompanyNameIgnoreCaseAndTitleIgnoreCaseAndLocationIgnoreCase(
                                 normalized.getCompanyName(), normalized.getTitle(), normalized.getLocation());
-                if (existingOpt.isPresent()) {
+                if (!matches.isEmpty()) {
+                    existingOpt = Optional.of(matches.get(0));
                     summary.setDuplicatesDetected(summary.getDuplicatesDetected() + 1);
                 }
             }

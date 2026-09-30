@@ -2,6 +2,8 @@ package com.jobrecruitment.config;
 
 import com.jobrecruitment.entity.*;
 import com.jobrecruitment.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -15,6 +17,8 @@ import java.util.Set;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
     private final UserRepository userRepository;
     private final CandidateProfileRepository candidateProfileRepository;
@@ -249,15 +253,17 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // Trigger initial live synchronization in background after boot
+        // Trigger initial live synchronization in background after full startup stabilization
+        // 90s delay allows Render's free-tier container to pass health checks and stabilize before heavy sync begins
         new Thread(() -> {
             try {
-                Thread.sleep(4000);
+                Thread.sleep(90_000);
+                log.info("Starting initial job synchronization after startup delay...");
                 jobAggregationService.syncAllSources();
             } catch (Exception e) {
-                // Handled internally in aggregation service
+                log.warn("Initial background sync failed or was interrupted: {}", e.getMessage());
             }
-        }).start();
+        }, "initial-sync-thread").start();
     }
 
     private Skill getOrCreateSkill(String name) {

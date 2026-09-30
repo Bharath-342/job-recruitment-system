@@ -2,6 +2,10 @@ package com.jobrecruitment.exception;
 
 import com.jobrecruitment.dto.response.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -16,6 +20,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiError> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
@@ -70,8 +76,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.error("Data integrity violation at {}: {}", request.getRequestURI(), ex.getMostSpecificCause().getMessage());
+        String msg = "A record with this data already exists or a required field is missing.";
+        ApiError error = new ApiError(409, "CONFLICT", msg, request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ApiError> handleDataAccess(DataAccessException ex, HttpServletRequest request) {
+        log.error("Database error at {}: {}", request.getRequestURI(), ex.getMostSpecificCause().getMessage());
+        ApiError error = new ApiError(503, "SERVICE_UNAVAILABLE", "Database is temporarily unavailable. Please try again.", request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneral(Exception ex, HttpServletRequest request) {
+        log.error("Unexpected error at {} [{}]: {}", request.getRequestURI(), ex.getClass().getSimpleName(), ex.getMessage(), ex);
         ApiError error = new ApiError(500, "INTERNAL_SERVER_ERROR", "An unexpected error occurred", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
