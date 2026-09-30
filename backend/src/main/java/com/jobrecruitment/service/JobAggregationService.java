@@ -49,7 +49,7 @@ public class JobAggregationService {
     }
 
     /**
-     * Search fresher jobs with strict India + strict 0-year filtering and database-level pagination.
+     * Search fresher jobs with strict India + strict 0-year filtering, Java/IT relevance, and database-level pagination.
      */
     @Transactional(readOnly = true)
     public Page<FresherJobResponse> searchFresherJobs(
@@ -59,13 +59,26 @@ public class JobAggregationService {
             String company,
             Boolean remote,
             ExperienceLevel experienceLevel,
+            com.jobrecruitment.entity.RoleCategory roleCategory,
             Pageable pageable) {
 
         Specification<AggregatedJob> spec = AggregatedJobSpecifications.withFilters(
-                keyword, location, role, company, remote, experienceLevel, true, true);
+                keyword, location, role, company, remote, experienceLevel, roleCategory, true, true);
 
         return aggregatedJobRepository.findAll(spec, pageable)
                 .map(FresherJobResponse::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<FresherJobResponse> searchFresherJobs(
+            String keyword,
+            String location,
+            String role,
+            String company,
+            Boolean remote,
+            ExperienceLevel experienceLevel,
+            Pageable pageable) {
+        return searchFresherJobs(keyword, location, role, company, remote, experienceLevel, null, pageable);
     }
 
     /**
@@ -333,7 +346,12 @@ public class JobAggregationService {
                 existing.setExperienceText(normalized.getExperienceText());
                 existing.setFresherConfidence(normalized.getFresherConfidence());
                 existing.setSkills(normalized.getSkills());
-                existing.setActive(isEligible); // Foreign or non-fresher jobs must NOT remain active
+                existing.setRoleCategory(normalized.getRoleCategory());
+                existing.setTechnologyMatch(normalized.getTechnologyMatch());
+                existing.setRelevanceScore(normalized.getRelevanceScore());
+                existing.setLastSeenAt(LocalDateTime.now());
+                existing.setLastSyncedAt(LocalDateTime.now());
+                existing.setActive(isEligible); // Foreign, non-fresher, or non-IT jobs must NOT remain active
                 existing.setLastVerifiedAt(LocalDateTime.now());
                 aggregatedJobRepository.save(existing);
                 summary.setJobsUpdated(summary.getJobsUpdated() + 1);

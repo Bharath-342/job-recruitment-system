@@ -27,7 +27,7 @@ public class FresherJobController {
     }
 
     @GetMapping("/fresher")
-    @Operation(summary = "Search fresher and entry-level jobs with multi-criteria filters")
+    @Operation(summary = "Search fresher and entry-level jobs with multi-criteria filters, Java relevance, and pagination")
     public ResponseEntity<Page<FresherJobResponse>> searchFresherJobs(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String location,
@@ -35,17 +35,25 @@ public class FresherJobController {
             @RequestParam(required = false) String company,
             @RequestParam(required = false) Boolean remote,
             @RequestParam(required = false) ExperienceLevel experienceLevel,
+            @RequestParam(required = false) com.jobrecruitment.entity.RoleCategory roleCategory,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "postedAt") String sort,
+            @RequestParam(defaultValue = "relevance") String sort,
             @RequestParam(defaultValue = "desc") String direction) {
 
         Sort.Direction dir = direction.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        String safeSort = (sort == null || sort.isBlank() || sort.equalsIgnoreCase("createdAt")) ? "postedAt" : sort;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, safeSort));
+        Sort sortObj;
+        if (sort == null || sort.isBlank() || sort.equalsIgnoreCase("relevance") || sort.equalsIgnoreCase("relevanceScore")) {
+            sortObj = Sort.by(Sort.Direction.DESC, "relevanceScore")
+                    .and(Sort.by(Sort.Direction.DESC, "postedAt"));
+        } else {
+            String safeSort = sort.equalsIgnoreCase("createdAt") ? "postedAt" : sort;
+            sortObj = Sort.by(dir, safeSort);
+        }
+        Pageable pageable = PageRequest.of(page, size, sortObj);
 
         return ResponseEntity.ok(aggregationService.searchFresherJobs(
-                keyword, location, role, company, remote, experienceLevel, pageable));
+                keyword, location, role, company, remote, experienceLevel, roleCategory, pageable));
     }
 
     @GetMapping("/search")

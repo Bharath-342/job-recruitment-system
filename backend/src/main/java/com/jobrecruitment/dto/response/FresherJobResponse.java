@@ -4,6 +4,7 @@ import com.jobrecruitment.entity.AggregatedJob;
 import com.jobrecruitment.entity.EligibilityStatus;
 import com.jobrecruitment.entity.ExperienceLevel;
 import com.jobrecruitment.entity.LocationClassification;
+import com.jobrecruitment.entity.RoleCategory;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -41,6 +42,13 @@ public class FresherJobResponse {
     private boolean isFresher;
     private Integer fresherConfidence;
     private boolean isActive;
+    private RoleCategory roleCategory;
+    private String roleCategoryName;
+    private String technologyMatch;
+    private Integer relevanceScore;
+    private boolean fresherEligible;
+    private LocalDateTime lastSeenAt;
+    private LocalDateTime lastSyncedAt;
     private LocalDateTime lastVerifiedAt;
     private LocalDateTime createdAt;
 
@@ -80,6 +88,13 @@ public class FresherJobResponse {
         res.isFresher = job.isFresher();
         res.fresherConfidence = job.getFresherConfidence();
         res.isActive = job.isActive();
+        res.roleCategory = job.getRoleCategory();
+        res.roleCategoryName = job.getRoleCategory() != null ? job.getRoleCategory().getDisplayName() : "Software Engineering";
+        res.technologyMatch = job.getTechnologyMatch();
+        res.relevanceScore = job.getRelevanceScore() != null ? job.getRelevanceScore() : 50;
+        res.fresherEligible = job.isFresher();
+        res.lastSeenAt = job.getLastSeenAt();
+        res.lastSyncedAt = job.getLastSyncedAt();
         res.lastVerifiedAt = job.getLastVerifiedAt();
         res.createdAt = job.getCreatedAt();
         return res;
@@ -184,6 +199,27 @@ public class FresherJobResponse {
 
     public LocalDateTime getLastVerifiedAt() { return lastVerifiedAt; }
     public void setLastVerifiedAt(LocalDateTime lastVerifiedAt) { this.lastVerifiedAt = lastVerifiedAt; }
+
+    public RoleCategory getRoleCategory() { return roleCategory; }
+    public void setRoleCategory(RoleCategory roleCategory) { this.roleCategory = roleCategory; }
+
+    public String getRoleCategoryName() { return roleCategoryName; }
+    public void setRoleCategoryName(String roleCategoryName) { this.roleCategoryName = roleCategoryName; }
+
+    public String getTechnologyMatch() { return technologyMatch; }
+    public void setTechnologyMatch(String technologyMatch) { this.technologyMatch = technologyMatch; }
+
+    public Integer getRelevanceScore() { return relevanceScore; }
+    public void setRelevanceScore(Integer relevanceScore) { this.relevanceScore = relevanceScore; }
+
+    public boolean isFresherEligible() { return fresherEligible; }
+    public void setFresherEligible(boolean fresherEligible) { this.fresherEligible = fresherEligible; }
+
+    public LocalDateTime getLastSeenAt() { return lastSeenAt; }
+    public void setLastSeenAt(LocalDateTime lastSeenAt) { this.lastSeenAt = lastSeenAt; }
+
+    public LocalDateTime getLastSyncedAt() { return lastSyncedAt; }
+    public void setLastSyncedAt(LocalDateTime lastSyncedAt) { this.lastSyncedAt = lastSyncedAt; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -97,35 +97,44 @@ export default function Home() {
           <Row className="align-items-center g-5">
             {/* Left Column: Platform Identity & Headline */}
             <Col lg={7}>
-              <div className="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3" style={{ background: 'rgba(20, 184, 166, 0.2)', border: '1px solid #14b8a6' }}>
-                <span className="badge bg-success rounded-pill px-2 py-1">STRICT 0-YEAR VERIFIED</span>
-                <span className="small text-light">Official ATS Aggregation • No Exp Jobs Allowed</span>
+              <div className="d-inline-flex align-items-center flex-wrap gap-2 px-3 py-1 rounded-pill mb-3" style={{ background: 'rgba(20, 184, 166, 0.2)', border: '1px solid #14b8a6' }}>
+                <span className="badge bg-success rounded-pill px-2 py-1">INDIA ONLY</span>
+                <span className="badge bg-warning text-dark rounded-pill px-2 py-1">0-YEAR FRESHERS</span>
+                <span className="small text-light">Java Full Stack & Software Engineering Discovery</span>
               </div>
 
               <h1 className="display-4 fw-black mb-3 text-white" style={{ letterSpacing: '-0.5px' }}>
-                Find Jobs Built for <span style={{ color: '#2dd4bf' }}>Freshers</span>
+                India Java & IT <span style={{ color: '#2dd4bf' }}>Fresher Discovery</span>
               </h1>
 
-              <p className="lead text-light mb-4" style={{ fontSize: '1.25rem', lineHeight: 1.6, opacity: 0.9 }}>
-                Search verified current job openings specifically designed for candidates with <strong>zero professional experience</strong>.
+              <p className="lead text-light mb-4" style={{ fontSize: '1.25rem', lineHeight: 1.6, opacity: 0.95 }}>
+                Find verified Java, Full Stack and IT fresher opportunities from companies hiring in India.
               </p>
 
               <div className="p-3 rounded-3 mb-4" style={{ background: 'rgba(255, 255, 255, 0.07)', borderLeft: '4px solid #2dd4bf' }}>
-                <div className="fw-bold text-white mb-1 d-flex align-items-center gap-2">
-                  <FaShieldAlt className="text-warning" /> Zero-Tolerance Experience Filter
+                <div className="fw-bold text-white mb-2 d-flex align-items-center gap-2">
+                  <FaShieldAlt className="text-warning" /> Verified Fresher Standards
                 </div>
-                <small className="text-light opacity-90">
-                  Every job is checked against the original employer ATS requirements. Positions mandating 1+, 2+, or senior experience—or with missing/ambiguous experience—are strictly excluded.
-                </small>
+                <div className="row g-2 text-light small opacity-90">
+                  <div className="col-sm-6">✓ <strong>India-Only:</strong> Domestic hubs & Remote India</div>
+                  <div className="col-sm-6">✓ <strong>Fresher-Focused:</strong> 0-year entry level only</div>
+                  <div className="col-sm-6">✓ <strong>Java-Focused:</strong> Full Stack, Spring Boot, React</div>
+                  <div className="col-sm-6">✓ <strong>MNC + Startup:</strong> Top tech employers & GCCs</div>
+                  <div className="col-sm-6">✓ <strong>Auto-Synced:</strong> Continuously updated feeds</div>
+                  <div className="col-sm-6">✓ <strong>Direct Links:</strong> Official company career portals</div>
+                </div>
               </div>
 
               {/* Action Buttons */}
               <div className="d-flex flex-wrap gap-3 mb-4">
-                <Button as={Link} to="/fresher-jobs" variant="warning" size="lg" className="fw-bold px-4 shadow text-dark d-flex align-items-center gap-2">
-                  <FaSearch /> Browse Fresher Jobs
+                <Button as={Link} to="/register" variant="warning" size="lg" className="fw-bold px-4 shadow text-dark d-flex align-items-center gap-2">
+                  <FaUserGraduate /> Register
                 </Button>
-                <Button as={Link} to="/companies" variant="outline-light" size="lg" className="px-4">
-                  <FaBuilding className="me-2" /> Verified Companies
+                <Button as={Link} to="/login" variant="outline-light" size="lg" className="px-4 fw-bold">
+                  Login
+                </Button>
+                <Button as={Link} to="/fresher-jobs" variant="light" size="lg" className="px-4 text-dark fw-bold d-flex align-items-center gap-2">
+                  <FaSearch /> Browse Jobs
                 </Button>
               </div>
 

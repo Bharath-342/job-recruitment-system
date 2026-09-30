@@ -19,6 +19,7 @@ public class AggregatedJobSpecifications {
             String company,
             Boolean remote,
             ExperienceLevel experienceLevel,
+            com.jobrecruitment.entity.RoleCategory roleCategory,
             Boolean isFresher,
             Boolean isActive) {
 
@@ -40,6 +41,7 @@ public class AggregatedJobSpecifications {
             // - eligibilityStatus == ELIGIBLE_ZERO_YEAR
             // - minimumExperienceYears == 0
             // - isActive == true
+            // - roleCategory != OTHER (Strict IT/Software only, rejecting HR, Sales, Marketing, etc.)
             if (Boolean.TRUE.equals(isFresher)) {
                 predicates.add(cb.equal(cb.upper(root.get("country")), "INDIA"));
                 predicates.add(cb.equal(root.get("locationClassification"), LocationClassification.INDIA));
@@ -47,11 +49,17 @@ public class AggregatedJobSpecifications {
                 predicates.add(cb.equal(root.get("eligibilityStatus"), EligibilityStatus.ELIGIBLE_ZERO_YEAR));
                 predicates.add(cb.equal(root.get("minimumExperienceYears"), 0));
                 predicates.add(cb.equal(root.get("isActive"), true));
+                predicates.add(cb.notEqual(root.get("roleCategory"), com.jobrecruitment.entity.RoleCategory.OTHER));
             } else if (Boolean.FALSE.equals(isFresher)) {
                 predicates.add(cb.equal(root.get("isFresher"), false));
             }
 
-            // 3. Keyword filter across title, description, skills, companyName
+            // 3. Role category filter (e.g. JAVA_FULL_STACK, JAVA_BACKEND, etc.)
+            if (roleCategory != null) {
+                predicates.add(cb.equal(root.get("roleCategory"), roleCategory));
+            }
+
+            // 4. Keyword filter across title, description, skills, companyName
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String pattern = "%" + keyword.trim().toLowerCase() + "%";
                 Predicate titleMatch = cb.like(cb.lower(root.get("title")), pattern);
@@ -61,7 +69,7 @@ public class AggregatedJobSpecifications {
                 predicates.add(cb.or(titleMatch, descMatch, skillsMatch, companyMatch));
             }
 
-            // 4. Location filter (City, State, Location text)
+            // 5. Location filter (City, State, Location text)
             if (location != null && !location.trim().isEmpty()) {
                 String loc = location.trim().toLowerCase();
                 String pattern = "%" + loc + "%";
@@ -71,29 +79,42 @@ public class AggregatedJobSpecifications {
                 predicates.add(cb.or(locMatch, cityMatch, stateMatch));
             }
 
-            // 5. Role keyword filter
+            // 6. Role keyword filter
             if (role != null && !role.trim().isEmpty()) {
                 String pattern = "%" + role.trim().toLowerCase() + "%";
                 predicates.add(cb.like(cb.lower(root.get("title")), pattern));
             }
 
-            // 6. Company name filter
+            // 7. Company name filter
             if (company != null && !company.trim().isEmpty()) {
                 String pattern = "%" + company.trim().toLowerCase() + "%";
                 predicates.add(cb.like(cb.lower(root.get("companyName")), pattern));
             }
 
-            // 7. Remote filter
+            // 8. Remote filter
             if (remote != null) {
                 predicates.add(cb.equal(root.get("remote"), remote));
             }
 
-            // 8. Experience level filter
+            // 9. Experience level filter
             if (experienceLevel != null) {
                 predicates.add(cb.equal(root.get("experienceLevel"), experienceLevel));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    // Overload for backward compatibility
+    public static Specification<AggregatedJob> withFilters(
+            String keyword,
+            String location,
+            String role,
+            String company,
+            Boolean remote,
+            ExperienceLevel experienceLevel,
+            Boolean isFresher,
+            Boolean isActive) {
+        return withFilters(keyword, location, role, company, remote, experienceLevel, null, isFresher, isActive);
     }
 }

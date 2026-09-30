@@ -18,7 +18,9 @@ import java.time.LocalDateTime;
     @Index(name = "idx_agg_source_provider", columnList = "source_provider"),
     @Index(name = "idx_agg_remote", columnList = "remote"),
     @Index(name = "idx_agg_eligibility", columnList = "eligibility_status"),
-    @Index(name = "idx_agg_min_exp", columnList = "minimum_experience_years")
+    @Index(name = "idx_agg_min_exp", columnList = "minimum_experience_years"),
+    @Index(name = "idx_agg_role_category", columnList = "role_category"),
+    @Index(name = "idx_agg_relevance_score", columnList = "relevance_score")
 })
 public class AggregatedJob {
 
@@ -122,8 +124,24 @@ public class AggregatedJob {
     @Column(name = "fresher_confidence")
     private Integer fresherConfidence = 0;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role_category", length = 50)
+    private RoleCategory roleCategory = RoleCategory.SOFTWARE_ENGINEERING;
+
+    @Column(name = "technology_match", length = 500)
+    private String technologyMatch;
+
+    @Column(name = "relevance_score")
+    private Integer relevanceScore = 50;
+
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
+
+    @Column(name = "last_seen_at")
+    private LocalDateTime lastSeenAt;
+
+    @Column(name = "last_synced_at")
+    private LocalDateTime lastSyncedAt;
 
     @Column(name = "last_verified_at")
     private LocalDateTime lastVerifiedAt;
@@ -261,6 +279,21 @@ public class AggregatedJob {
 
     public EligibilityStatus getExperienceClassification() { return eligibilityStatus; }
     public void setExperienceClassification(EligibilityStatus status) { this.eligibilityStatus = status; }
+
+    public RoleCategory getRoleCategory() { return roleCategory; }
+    public void setRoleCategory(RoleCategory roleCategory) { this.roleCategory = roleCategory; }
+
+    public String getTechnologyMatch() { return technologyMatch; }
+    public void setTechnologyMatch(String technologyMatch) { this.technologyMatch = technologyMatch; }
+
+    public Integer getRelevanceScore() { return relevanceScore; }
+    public void setRelevanceScore(Integer relevanceScore) { this.relevanceScore = relevanceScore; }
+
+    public LocalDateTime getLastSeenAt() { return lastSeenAt; }
+    public void setLastSeenAt(LocalDateTime lastSeenAt) { this.lastSeenAt = lastSeenAt; }
+
+    public LocalDateTime getLastSyncedAt() { return lastSyncedAt; }
+    public void setLastSyncedAt(LocalDateTime lastSyncedAt) { this.lastSyncedAt = lastSyncedAt; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

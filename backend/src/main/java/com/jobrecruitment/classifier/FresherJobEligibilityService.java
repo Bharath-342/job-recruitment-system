@@ -32,29 +32,41 @@ public class FresherJobEligibilityService {
     private final ExperienceRequirementParser experienceParser;
     private final IndiaJobLocationValidator locationValidator;
     private final CountryNormalizer countryNormalizer;
+    private final JavaRelevanceClassifier relevanceClassifier;
 
     public FresherJobEligibilityService(JobLocationParser locationParser,
                                         ExperienceRequirementParser experienceParser) {
         this(locationParser, experienceParser,
              new IndiaJobLocationValidator(locationParser, new CountryNormalizer()),
-             new CountryNormalizer());
+             new CountryNormalizer(),
+             new JavaRelevanceClassifier());
+    }
+
+    public FresherJobEligibilityService(JobLocationParser locationParser,
+                                        ExperienceRequirementParser experienceParser,
+                                        IndiaJobLocationValidator locationValidator,
+                                        CountryNormalizer countryNormalizer) {
+        this(locationParser, experienceParser, locationValidator, countryNormalizer, new JavaRelevanceClassifier());
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     public FresherJobEligibilityService(JobLocationParser locationParser,
                                         ExperienceRequirementParser experienceParser,
                                         IndiaJobLocationValidator locationValidator,
-                                        CountryNormalizer countryNormalizer) {
+                                        CountryNormalizer countryNormalizer,
+                                        JavaRelevanceClassifier relevanceClassifier) {
         this.locationParser = locationParser;
         this.experienceParser = experienceParser;
         this.locationValidator = locationValidator;
         this.countryNormalizer = countryNormalizer;
+        this.relevanceClassifier = relevanceClassifier;
     }
 
     public record FresherEligibilityDecision(
             boolean isEligible,
             JobLocationParser.ParsedLocation location,
             ExperienceRequirementParser.ParsedExperience experience,
+            JavaRelevanceClassifier.JavaRelevanceResult relevance,
             String rejectionReason
     ) {}
 
@@ -89,7 +101,13 @@ public class FresherJobEligibilityService {
             return false;
         }
 
-        // 4. isActive == true
+        // 4. Must be an IT / Software role (Reject Non-IT per Section 2)
+        if (job.getRoleCategory() == com.jobrecruitment.entity.RoleCategory.OTHER) {
+            log.debug("isEligibleForIndianFreshers check failed: RoleCategory is OTHER (Non-IT)");
+            return false;
+        }
+
+        // 5. isActive == true
         if (!job.isActive()) {
             log.debug("isEligibleForIndianFreshers check failed: isActive is false");
             return false;
@@ -109,7 +127,7 @@ public class FresherJobEligibilityService {
                     ? "REJECTED_FOREIGN_COUNTRY (" + parsedLoc.details() + ")"
                     : "REJECTED_UNKNOWN_COUNTRY (" + (rawLocation != null ? rawLocation : "blank") + ")";
             log.info("Location check failed: {} - Location: '{}'", reason, rawLocation);
-            return new FresherEligibilityDecision(false, parsedLoc, null, reason);
+            return new FresherEligibilityDecision(false, parsedLoc, null, null, reason);
         }
 
         // 2. Validate Experience (Strict 0-Year Only)
@@ -119,11 +137,19 @@ public class FresherJobEligibilityService {
                     ? "REJECTED_EXPERIENCE_REQUIRED (" + parsedExp.details() + ")"
                     : "REJECTED_UNKNOWN_EXPERIENCE (Experience unverifiable in source text)";
             log.info("Experience check failed: {} - Title: '{}'", reason, title);
-            return new FresherEligibilityDecision(false, parsedLoc, parsedExp, reason);
+            return new FresherEligibilityDecision(false, parsedLoc, parsedExp, null, reason);
         }
 
-        // Both checks passed: India + Strict 0-Year
-        return new FresherEligibilityDecision(true, parsedLoc, parsedExp, null);
+        // 3. Validate IT / Software Role Relevance (Strict IT-Only per Section 2 & 3)
+        JavaRelevanceClassifier.JavaRelevanceResult relevance = relevanceClassifier.classify(title, description);
+        if (!relevance.isItSoftware()) {
+            String reason = "REJECTED_NON_IT_ROLE (" + relevance.details() + ")";
+            log.info("IT/Software role check failed: {} - Title: '{}'", reason, title);
+            return new FresherEligibilityDecision(false, parsedLoc, parsedExp, relevance, reason);
+        }
+
+        // All checks passed: India + Strict 0-Year + IT/Software
+        return new FresherEligibilityDecision(true, parsedLoc, parsedExp, relevance, null);
     }
 
     public IndiaJobLocationValidator getLocationValidator() {

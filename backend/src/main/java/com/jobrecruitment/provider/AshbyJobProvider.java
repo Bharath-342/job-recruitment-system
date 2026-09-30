@@ -170,6 +170,17 @@ public class AshbyJobProvider implements JobSourceProvider {
 
         job.setFresher(decision.isEligible());
 
+        // Java relevance and categorization
+        if (decision.relevance() != null) {
+            job.setRoleCategory(decision.relevance().roleCategory());
+            job.setTechnologyMatch(decision.relevance().technologyMatch());
+            job.setRelevanceScore(decision.relevance().relevanceScore());
+        } else {
+            job.setRoleCategory(RoleCategory.OTHER);
+            job.setTechnologyMatch("");
+            job.setRelevanceScore(0);
+        }
+
         // Classification
         FresherClassificationResult result = classifier.classify(rawJob.getTitle(), rawJob.getDescription());
         job.setExperienceLevel(decision.isEligible() ? ExperienceLevel.FRESHER : result.getExperienceLevel());
@@ -177,6 +188,8 @@ public class AshbyJobProvider implements JobSourceProvider {
 
         job.setSkills(skillExtractor.extractSkills(rawJob.getTitle(), rawJob.getDescription()));
         job.setActive(decision.isEligible());
+        job.setLastSeenAt(LocalDateTime.now());
+        job.setLastSyncedAt(LocalDateTime.now());
         job.setLastVerifiedAt(LocalDateTime.now());
 
         return job;
