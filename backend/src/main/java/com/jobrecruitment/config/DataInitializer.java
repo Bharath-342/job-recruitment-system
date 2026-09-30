@@ -33,6 +33,7 @@ public class DataInitializer implements CommandLineRunner {
     private final AggregatedJobRepository aggregatedJobRepository;
     private final JobLocationParser locationParser;
     private final ExperienceRequirementParser experienceParser;
+    private final com.jobrecruitment.classifier.FresherJobEligibilityService fresherJobEligibilityService;
     private final com.jobrecruitment.service.JobAggregationService jobAggregationService;
 
     public DataInitializer(UserRepository userRepository,
@@ -46,6 +47,7 @@ public class DataInitializer implements CommandLineRunner {
                            AggregatedJobRepository aggregatedJobRepository,
                            JobLocationParser locationParser,
                            ExperienceRequirementParser experienceParser,
+                           com.jobrecruitment.classifier.FresherJobEligibilityService fresherJobEligibilityService,
                            com.jobrecruitment.service.JobAggregationService jobAggregationService) {
         this.userRepository = userRepository;
         this.candidateProfileRepository = candidateProfileRepository;
@@ -58,6 +60,7 @@ public class DataInitializer implements CommandLineRunner {
         this.aggregatedJobRepository = aggregatedJobRepository;
         this.locationParser = locationParser;
         this.experienceParser = experienceParser;
+        this.fresherJobEligibilityService = fresherJobEligibilityService;
         this.jobAggregationService = jobAggregationService;
     }
 
@@ -260,16 +263,26 @@ public class DataInitializer implements CommandLineRunner {
                 });
         }
 
-        // 9. Retroactive Audit & Rectification on existing aggregated jobs in database
+        // 9. Retroactive Audit & Rectification on existing aggregated jobs in database (Section 13)
         // Re-evaluates all historical jobs with the strict parsers to ensure ZERO foreign or experienced jobs remain active.
-        log.info("Running retroactive audit and rectification on existing aggregated jobs...");
+        log.info("Running retroactive audit and rectification on existing aggregated jobs (Section 13)...");
         List<AggregatedJob> allExisting = aggregatedJobRepository.findAll();
         int rectifiedCount = 0;
+        int activeFreshersCount = 0;
         for (AggregatedJob job : allExisting) {
             JobLocationParser.ParsedLocation loc = locationParser.parse(job.getLocation(), job.getTitle(), job.getDescription());
             ExperienceRequirementParser.ParsedExperience exp = experienceParser.parse(job.getTitle(), job.getDescription());
 
-            job.setCountry(loc.country());
+            if (loc.classification() == LocationClassification.INDIA) {
+                job.setCountry("INDIA");
+                job.setCountryCode("IN");
+                job.setCountryName("India");
+            } else {
+                job.setCountry(loc.country() != null ? loc.country().toUpperCase() : "UNKNOWN");
+                job.setCountryCode(null);
+                job.setCountryName(loc.country());
+            }
+
             job.setState(loc.state());
             job.setCity(loc.city());
             job.setLocationClassification(loc.classification());
@@ -280,21 +293,24 @@ public class DataInitializer implements CommandLineRunner {
             job.setMaximumExperienceYears(exp.maximumExperienceYears());
             job.setExperienceText(exp.experienceText());
 
-            boolean isIndia = loc.classification() == LocationClassification.INDIA;
-            boolean isZeroYear = exp.experienceClassification() == EligibilityStatus.ELIGIBLE_ZERO_YEAR;
+            boolean isIndia = loc.classification() == LocationClassification.INDIA && "INDIA".equalsIgnoreCase(job.getCountry());
+            boolean isZeroYear = exp.experienceClassification() == EligibilityStatus.ELIGIBLE_ZERO_YEAR &&
+                                 (exp.minimumExperienceYears() == null || exp.minimumExperienceYears() == 0);
 
+            // Deactivate and remove from fresher dataset any job that fails Section 12/13
             if (!isIndia || !isZeroYear) {
                 job.setFresher(false);
-                if (!isIndia) {
-                    job.setActive(false);
-                }
+                job.setActive(false);
                 rectifiedCount++;
             } else {
                 job.setFresher(true);
+                job.setActive(true);
+                activeFreshersCount++;
             }
             aggregatedJobRepository.save(job);
         }
-        log.info("Completed retroactive audit. Inspected {} jobs, updated/rectified {}.", allExisting.size(), rectifiedCount);
+        log.info("Completed retroactive audit (Section 13). Inspected {} jobs, deactivated/rectified {}, active verified Indian fresher jobs {}.",
+                allExisting.size(), rectifiedCount, activeFreshersCount);
 
         // 10. Background synchronization after startup stabilization
         new Thread(() -> {

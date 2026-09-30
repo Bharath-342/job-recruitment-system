@@ -7,6 +7,7 @@ public class SyncSummaryDto {
     private int sourcesSuccessful;
     private int sourcesFailed;
     private int totalJobsDiscovered;
+    private int jobsFromIndia;
     private int jobsInserted;
     private int jobsUpdated;
     private int jobsDeactivated;
@@ -31,6 +32,9 @@ public class SyncSummaryDto {
 
     public int getTotalJobsDiscovered() { return totalJobsDiscovered; }
     public void setTotalJobsDiscovered(int totalJobsDiscovered) { this.totalJobsDiscovered = totalJobsDiscovered; }
+
+    public int getJobsFromIndia() { return jobsFromIndia; }
+    public void setJobsFromIndia(int jobsFromIndia) { this.jobsFromIndia = jobsFromIndia; }
 
     public int getJobsInserted() { return jobsInserted; }
     public void setJobsInserted(int jobsInserted) { this.jobsInserted = jobsInserted; }

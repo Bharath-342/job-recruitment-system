@@ -41,6 +41,9 @@ class JobAggregationServiceTest {
     @Mock
     private JobSourceProvider mockProvider;
 
+    @Mock
+    private com.jobrecruitment.classifier.FresherJobEligibilityService eligibilityService;
+
     @InjectMocks
     private JobAggregationService aggregationService;
 
@@ -94,6 +97,7 @@ class JobAggregationServiceTest {
         aggJob.setExperienceLevel(ExperienceLevel.FRESHER);
         aggJob.setActive(true);
         when(mockProvider.normalize(any(), eq(source1))).thenReturn(aggJob);
+        when(eligibilityService.isEligibleForIndianFreshers(any())).thenReturn(true);
         when(aggregatedJobRepository.findBySourceProviderAndExternalJobId("GREENHOUSE", "101")).thenReturn(Optional.empty());
 
         // Source 2 fails with exception (e.g. timeout / 429)

@@ -33,13 +33,16 @@ public class JobAggregationService {
     private final CompanySourceRepository companySourceRepository;
     private final AggregatedJobRepository aggregatedJobRepository;
     private final JobProviderFactory providerFactory;
+    private final com.jobrecruitment.classifier.FresherJobEligibilityService eligibilityService;
 
     public JobAggregationService(CompanySourceRepository companySourceRepository,
                                  AggregatedJobRepository aggregatedJobRepository,
-                                 JobProviderFactory providerFactory) {
+                                 JobProviderFactory providerFactory,
+                                 com.jobrecruitment.classifier.FresherJobEligibilityService eligibilityService) {
         this.companySourceRepository = companySourceRepository;
         this.aggregatedJobRepository = aggregatedJobRepository;
         this.providerFactory = providerFactory;
+        this.eligibilityService = eligibilityService;
     }
 
     /**
@@ -228,19 +231,33 @@ public class JobAggregationService {
             seenExternalIds.add(raw.getExternalJobId());
             AggregatedJob normalized = provider.normalize(raw, source);
 
-            if (normalized.isFresher()) {
+            boolean isIndia = normalized.getLocationClassification() == LocationClassification.INDIA &&
+                              "INDIA".equalsIgnoreCase(normalized.getCountry());
+            if (isIndia) {
+                summary.setJobsFromIndia(summary.getJobsFromIndia() + 1);
+            }
+
+            // Central Eligibility Rule (Section 12)
+            boolean isEligible = eligibilityService.isEligibleForIndianFreshers(normalized);
+
+            if (isEligible) {
                 fresherCount++;
+                log.info("APPROVED Indian Fresher Job: [{}] {} in {}", normalized.getCompanyName(), normalized.getTitle(), normalized.getLocation());
             } else {
-                // Audit rejection tracking
+                // Rejection logging per Section 25
                 if (normalized.getLocationClassification() == LocationClassification.NON_INDIA) {
+                    log.info("REJECTED_FOREIGN_COUNTRY: [{}] {} in {}", normalized.getCompanyName(), normalized.getTitle(), normalized.getLocation());
                     summary.setJobsRejectedForeign(summary.getJobsRejectedForeign() + 1);
                 } else if (normalized.getLocationClassification() == LocationClassification.UNKNOWN) {
+                    log.info("REJECTED_UNKNOWN_COUNTRY: [{}] {} in {}", normalized.getCompanyName(), normalized.getTitle(), normalized.getLocation());
                     summary.setJobsRejectedLocationUnknown(summary.getJobsRejectedLocationUnknown() + 1);
                 }
 
                 if (normalized.getEligibilityStatus() == EligibilityStatus.NOT_ELIGIBLE) {
+                    log.info("REJECTED_EXPERIENCE_REQUIRED: [{}] {} requiring {} yrs", normalized.getCompanyName(), normalized.getTitle(), normalized.getMinimumExperienceYears());
                     summary.setJobsRejectedExperienceGreaterThanZero(summary.getJobsRejectedExperienceGreaterThanZero() + 1);
                 } else if (normalized.getEligibilityStatus() == EligibilityStatus.UNKNOWN) {
+                    log.info("REJECTED_UNKNOWN_EXPERIENCE: [{}] {}", normalized.getCompanyName(), normalized.getTitle());
                     summary.setJobsRejectedExperienceUnknown(summary.getJobsRejectedExperienceUnknown() + 1);
                 }
             }
@@ -257,6 +274,7 @@ public class JobAggregationService {
                                 normalized.getCompanyName(), normalized.getTitle(), normalized.getLocation());
                 if (!matches.isEmpty()) {
                     existingOpt = Optional.of(matches.get(0));
+                    log.info("REJECTED_DUPLICATE: [{}] {} matches existing ID {}", normalized.getCompanyName(), normalized.getTitle(), matches.get(0).getId());
                     summary.setDuplicatesDetected(summary.getDuplicatesDetected() + 1);
                 }
             }
@@ -267,6 +285,8 @@ public class JobAggregationService {
                 existing.setDescription(normalized.getDescription());
                 existing.setLocation(normalized.getLocation());
                 existing.setCountry(normalized.getCountry());
+                existing.setCountryCode(normalized.getCountryCode());
+                existing.setCountryName(normalized.getCountryName());
                 existing.setState(normalized.getState());
                 existing.setCity(normalized.getCity());
                 existing.setLocationClassification(normalized.getLocationClassification());
@@ -276,18 +296,19 @@ public class JobAggregationService {
                 existing.setSourceUrl(normalized.getSourceUrl());
                 existing.setRemote(normalized.isRemote());
                 existing.setExperienceLevel(normalized.getExperienceLevel());
-                existing.setFresher(normalized.isFresher());
+                existing.setFresher(isEligible);
                 existing.setEligibilityStatus(normalized.getEligibilityStatus());
                 existing.setMinimumExperienceYears(normalized.getMinimumExperienceYears());
                 existing.setMaximumExperienceYears(normalized.getMaximumExperienceYears());
                 existing.setExperienceText(normalized.getExperienceText());
                 existing.setFresherConfidence(normalized.getFresherConfidence());
                 existing.setSkills(normalized.getSkills());
-                existing.setActive(true);
+                existing.setActive(isEligible); // Foreign or non-fresher jobs must NOT remain active
                 existing.setLastVerifiedAt(LocalDateTime.now());
                 aggregatedJobRepository.save(existing);
                 summary.setJobsUpdated(summary.getJobsUpdated() + 1);
-            } else {
+            } else if (isEligible) {
+                // Section 12: Only jobs returning true may be stored/returned as Fresher Jobs
                 aggregatedJobRepository.save(normalized);
                 summary.setJobsInserted(summary.getJobsInserted() + 1);
             }

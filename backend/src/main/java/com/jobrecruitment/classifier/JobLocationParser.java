@@ -18,17 +18,27 @@ public class JobLocationParser {
             String locationText,
             int locationConfidence,
             LocationClassification classification,
-            String details
-    ) {}
+            String details,
+            String countryCode,
+            String countryName
+    ) {
+        public ParsedLocation(String country, String state, String city, boolean isRemote,
+                              String locationText, int locationConfidence, LocationClassification classification, String details) {
+            this(country, state, city, isRemote, locationText, locationConfidence, classification, details,
+                 classification == LocationClassification.INDIA ? "IN" : null,
+                 classification == LocationClassification.INDIA ? "India" : country);
+        }
+    }
 
     // Explicit foreign country patterns (Hard NON_INDIA)
     private static final Pattern NON_INDIA_COUNTRY_PATTERN = Pattern.compile(
             "\\b(usa|united states|united states of america|u\\.s\\.a?\\.?|uk|united kingdom|great britain|england|scotland|wales|canada|australia|germany|france|singapore|uae|united arab emirates|dubai|netherlands|ireland|switzerland|sweden|spain|italy|poland|israel|japan|china|brazil|mexico|new zealand|south africa|philippines|vietnam|colombia|argentina|portugal|belgium|austria|norway|finland|denmark|czech republic|romania|hungary|estonia|taiwan|korea|indonesia|malaysia|egypt|kenya|nigeria)\\b",
             Pattern.CASE_INSENSITIVE);
 
-    // Foreign cities and US/Canadian states / regions (Hard NON_INDIA)
+    // Foreign cities, US state codes, and US/Canadian/European states / regions (Hard NON_INDIA)
     private static final Pattern NON_INDIA_CITY_REGION_PATTERN = Pattern.compile(
-            "\\b(new york|nyc|boston|san francisco|sf bay area|bay area|seattle|austin|los angeles|chicago|denver|atlanta|dallas|houston|miami|philadelphia|washington\\s*(?:d\\.?c\\.?)?|california|texas|massachusetts|washington state|ontario|quebec|british columbia|london|manchester|birmingham|edinburgh|berlin|munich|frankfurt|hamburg|paris|lyon|amsterdam|rotterdam|dublin|sydney|melbourne|brisbane|toronto|vancouver|montreal|ottawa|tokyo|seoul|beijing|shanghai|hong kong|sao paulo|mexico city|madrid|barcelona|milan|rome|zurich|geneva|stockholm|warsaw|krakow|tel aviv|auckland)\\b",
+            "\\b(new york|nyc|boston|san francisco|sf bay area|bay area|seattle|austin|los angeles|chicago|denver|atlanta|dallas|houston|miami|philadelphia|washington\\s*(?:d\\.?c\\.?)?|california|texas|massachusetts|washington state|virginia|arlington|maryland|colorado|illinois|ohio|florida|georgia|north carolina|new jersey|pennsylvania|michigan|arizona|ontario|quebec|british columbia|london|manchester|birmingham|edinburgh|berlin|munich|frankfurt|hamburg|paris|lyon|amsterdam|rotterdam|dublin|sydney|melbourne|brisbane|toronto|vancouver|montreal|ottawa|tokyo|seoul|beijing|shanghai|hong kong|sao paulo|mexico city|madrid|barcelona|milan|rome|zurich|geneva|stockholm|warsaw|krakow|tel aviv|auckland)\\b|" +
+            ",\\s*(?:al|ak|az|ar|ca|co|ct|de|fl|ga|hi|id|il|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|oh|ok|or|pa|ri|sc|sd|tn|tx|ut|vt|va|wa|wv|wi|wy)\\b",
             Pattern.CASE_INSENSITIVE);
 
     // Explicit non-India remote regions
@@ -42,7 +52,7 @@ public class JobLocationParser {
             Pattern.CASE_INSENSITIVE);
 
     private static final Pattern INDIA_REMOTE_PATTERN = Pattern.compile(
-            "\\b(remote\\s*-\\s*india|india\\s*-\\s*remote|remote\\s*\\(india\\)|india\\s*\\(remote\\)|remote,\\s*india|india,\\s*remote|work\\s+from\\s+home\\s*-\\s*india|remote\\s+in\\s+india|anywhere\\s+in\\s+india)\\b",
+            "\\b(remote\\s*-\\s*india|india\\s*-\\s*remote|remote\\s*\\(india\\)|india\\s*\\(remote\\)|remote,\\s*india|india,\\s*remote|work\\s+from\\s+home\\s*-\\s*india|remote\\s+in\\s+india|anywhere\\s+in\\s+india|india\\s+remote|remote\\s+india)\\b",
             Pattern.CASE_INSENSITIVE);
 
     // Indian Cities with their canonical name and State
@@ -153,15 +163,18 @@ public class JobLocationParser {
                     hasIndianCityOrState(lowerLoc);
 
             if (!explicitlyMentionsIndia) {
+                String foreignCountry = extractForeignCountryName(lowerLoc);
                 return new ParsedLocation(
-                        extractForeignCountryName(lowerLoc),
+                        foreignCountry.toUpperCase(),
                         null,
                         null,
                         isRemote,
                         loc,
                         95,
                         LocationClassification.NON_INDIA,
-                        "Foreign location detected: " + loc
+                        "Foreign location detected: " + loc,
+                        null,
+                        foreignCountry
                 );
             }
         }
@@ -169,14 +182,16 @@ public class JobLocationParser {
         // 2. EXPLICIT INDIA REMOTE CHECK
         if (INDIA_REMOTE_PATTERN.matcher(lowerLoc).find() || INDIA_REMOTE_PATTERN.matcher(safeTitle.toLowerCase()).find()) {
             return new ParsedLocation(
-                    "India",
+                    "INDIA",
                     null,
                     "Remote",
                     true,
                     loc,
                     95,
                     LocationClassification.INDIA,
-                    "Verified Remote - India position"
+                    "Verified Remote - India position",
+                    "IN",
+                    "India"
             );
         }
 
@@ -212,21 +227,23 @@ public class JobLocationParser {
                 // If it lists both e.g. "Boston, USA; Bengaluru, India", this job is valid for India
                 if (matchedCity != null) {
                     return new ParsedLocation(
-                            "India",
+                            "INDIA",
                             matchedState,
                             matchedCity,
                             isRemote,
                             loc,
                             90,
                             LocationClassification.INDIA,
-                            "Multi-region opening verified with Indian presence in " + matchedCity
+                            "Multi-region opening verified with Indian presence in " + matchedCity,
+                            "IN",
+                            "India"
                     );
                 }
             }
 
             int confidence = matchedCity != null ? 95 : (matchedState != null ? 90 : 85);
             return new ParsedLocation(
-                    "India",
+                    "INDIA",
                     matchedState,
                     matchedCity,
                     isRemote,
@@ -234,21 +251,25 @@ public class JobLocationParser {
                     confidence,
                     LocationClassification.INDIA,
                     "Verified Indian location: " + (matchedCity != null ? matchedCity + ", " : "") +
-                            (matchedState != null ? matchedState + ", " : "") + "India"
+                            (matchedState != null ? matchedState + ", " : "") + "India",
+                    "IN",
+                    "India"
             );
         }
 
         // 5. AMBIGUOUS / GENERIC LOCATION CHECK (e.g. "Remote", "Worldwide", "Anywhere", "Not Specified", blank)
         // Under strict policy: NEVER assume India without explicit source verification
         return new ParsedLocation(
-                "Unknown",
+                "UNKNOWN",
                 null,
                 null,
                 isRemote,
                 loc,
                 0,
                 LocationClassification.UNKNOWN,
-                "Ambiguous or non-Indian location without explicit India confirmation: " + loc
+                "Ambiguous or non-Indian location without explicit India confirmation: " + loc,
+                null,
+                null
         );
     }
 

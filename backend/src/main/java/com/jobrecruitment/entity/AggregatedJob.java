@@ -45,7 +45,13 @@ public class AggregatedJob {
     private String location;
 
     @Column(length = 100)
-    private String country = "India";
+    private String country;
+
+    @Column(name = "country_code", length = 10)
+    private String countryCode;
+
+    @Column(name = "country_name", length = 100)
+    private String countryName;
 
     @Column(length = 100)
     private String state;
@@ -55,7 +61,7 @@ public class AggregatedJob {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "location_classification", length = 30)
-    private LocationClassification locationClassification = LocationClassification.INDIA;
+    private LocationClassification locationClassification = LocationClassification.UNKNOWN;
 
     @Column(name = "employment_type", length = 50)
     private String employmentType = "FULL_TIME";
@@ -171,6 +177,12 @@ public class AggregatedJob {
 
     public String getCountry() { return country; }
     public void setCountry(String country) { this.country = country; }
+
+    public String getCountryCode() { return countryCode; }
+    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+
+    public String getCountryName() { return countryName; }
+    public void setCountryName(String countryName) { this.countryName = countryName; }
 
     public String getState() { return state; }
     public void setState(String state) { this.state = state; }

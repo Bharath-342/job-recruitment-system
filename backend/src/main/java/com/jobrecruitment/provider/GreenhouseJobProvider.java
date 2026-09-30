@@ -153,7 +153,15 @@ public class GreenhouseJobProvider implements JobSourceProvider {
                 eligibilityService.evaluateEligibility(rawJob.getTitle(), rawJob.getDescription(), rawJob.getLocation());
 
         // Location classification
-        job.setCountry(decision.location().country());
+        if (decision.location().classification() == LocationClassification.INDIA) {
+            job.setCountry("INDIA");
+            job.setCountryCode("IN");
+            job.setCountryName("India");
+        } else {
+            job.setCountry(decision.location().country() != null ? decision.location().country().toUpperCase() : "UNKNOWN");
+            job.setCountryCode(null);
+            job.setCountryName(decision.location().country());
+        }
         job.setState(decision.location().state());
         job.setCity(decision.location().city());
         job.setLocationClassification(decision.location().classification());
@@ -181,7 +189,7 @@ public class GreenhouseJobProvider implements JobSourceProvider {
 
         // Skills
         job.setSkills(skillExtractor.extractSkills(rawJob.getTitle(), rawJob.getDescription()));
-        job.setActive(true);
+        job.setActive(decision.isEligible());
         job.setLastVerifiedAt(LocalDateTime.now());
 
         return job;

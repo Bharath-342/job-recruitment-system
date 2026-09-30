@@ -32,22 +32,21 @@ public class AggregatedJobSpecifications {
                 predicates.add(cb.equal(root.get("isActive"), true));
             }
 
-            // 2. Strict India-Only & Strict 0-Year Policy (Section 2, 3, 5, 12)
+            // 2. Strict India-Only & Strict 0-Year Policy (Section 2, 3, 5, 12, 14, 16)
             // When querying fresher jobs (isFresher == true), ALWAYS enforce:
-            // - Country == India OR LocationClassification == INDIA
+            // - Country == INDIA
+            // - LocationClassification == INDIA
             // - isFresher == true
             // - eligibilityStatus == ELIGIBLE_ZERO_YEAR
             // - minimumExperienceYears == 0
+            // - isActive == true
             if (Boolean.TRUE.equals(isFresher)) {
-                // Country India check
-                Predicate countryIsIndia = cb.equal(cb.lower(root.get("country")), "india");
-                Predicate locClassIsIndia = cb.equal(root.get("locationClassification"), LocationClassification.INDIA);
-                predicates.add(cb.or(countryIsIndia, locClassIsIndia));
-
-                // Strict 0-Year experience check
+                predicates.add(cb.equal(cb.upper(root.get("country")), "INDIA"));
+                predicates.add(cb.equal(root.get("locationClassification"), LocationClassification.INDIA));
                 predicates.add(cb.equal(root.get("isFresher"), true));
                 predicates.add(cb.equal(root.get("eligibilityStatus"), EligibilityStatus.ELIGIBLE_ZERO_YEAR));
                 predicates.add(cb.equal(root.get("minimumExperienceYears"), 0));
+                predicates.add(cb.equal(root.get("isActive"), true));
             } else if (Boolean.FALSE.equals(isFresher)) {
                 predicates.add(cb.equal(root.get("isFresher"), false));
             }

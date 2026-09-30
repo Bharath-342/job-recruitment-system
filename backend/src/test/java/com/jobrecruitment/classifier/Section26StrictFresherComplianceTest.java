@@ -16,13 +16,17 @@ class Section26StrictFresherComplianceTest {
 
     private JobLocationParser locationParser;
     private ExperienceRequirementParser experienceParser;
+    private CountryNormalizer countryNormalizer;
+    private IndiaJobLocationValidator locationValidator;
     private FresherJobEligibilityService eligibilityService;
 
     @BeforeEach
     void setUp() {
         locationParser = new JobLocationParser();
+        countryNormalizer = new CountryNormalizer();
+        locationValidator = new IndiaJobLocationValidator(locationParser, countryNormalizer);
         experienceParser = new ExperienceRequirementParser();
-        eligibilityService = new FresherJobEligibilityService(locationParser, experienceParser);
+        eligibilityService = new FresherJobEligibilityService(locationParser, experienceParser, locationValidator, countryNormalizer);
     }
 
     // ==========================================
@@ -102,7 +106,9 @@ class Section26StrictFresherComplianceTest {
     void testI_HyderabadIndia() {
         var res = locationParser.parse("Hyderabad, India", "Software Engineer", "");
         assertEquals(LocationClassification.INDIA, res.classification());
-        assertEquals("India", res.country());
+        assertEquals("INDIA", res.country());
+        assertEquals("IN", res.countryCode());
+        assertEquals("India", res.countryName());
         assertEquals("Hyderabad", res.city());
         assertEquals("Telangana", res.state());
     }
@@ -112,7 +118,7 @@ class Section26StrictFresherComplianceTest {
     void testJ_BengaluruIndia() {
         var res = locationParser.parse("Bengaluru, Karnataka, India", "Java Engineer", "");
         assertEquals(LocationClassification.INDIA, res.classification());
-        assertEquals("India", res.country());
+        assertEquals("INDIA", res.country());
         assertEquals("Bengaluru", res.city());
     }
 
@@ -121,7 +127,7 @@ class Section26StrictFresherComplianceTest {
     void testK_RemoteIndia() {
         var res = locationParser.parse("Remote - India", "Full Stack Developer", "");
         assertEquals(LocationClassification.INDIA, res.classification());
-        assertEquals("India", res.country());
+        assertEquals("INDIA", res.country());
         assertTrue(res.isRemote());
     }
 

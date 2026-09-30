@@ -391,82 +391,104 @@ export default function FresherJobs() {
 
         {/* Job Cards Grid */}
         {!loading && jobs.length > 0 && (
-          <Row className="g-4">
-            {jobs.map((job) => (
-              <Col key={job.id} lg={4} md={6}>
-                <Card className="h-100 border-0 shadow-sm rounded-4 position-relative hover-shadow transition-all">
-                  <Card.Body className="d-flex flex-column p-4">
-                    {/* Top Row: Company & Source Badge */}
-                    <div className="d-flex justify-content-between align-items-start mb-2">
-                      <span className="fw-bold text-primary fs-5">{job.companyName}</span>
-                      <Badge bg="light" text="dark" className="border">
-                        {job.sourceProvider || 'ATS Verified'}
-                      </Badge>
-                    </div>
+          <>
+            <Row className="g-4">
+              {jobs.map((job) => {
+                const locationText = [job.city, job.state].filter(Boolean).join(', ');
+                const displayLocation = locationText ? `${locationText}, India` : (job.location && job.location.toLowerCase().includes('india') ? job.location : `${job.location || 'India'}, India`);
 
-                    {/* Job Title */}
-                    <h5 className="fw-bold text-dark mb-2" style={{ lineHeight: '1.4' }}>
-                      {job.title}
-                    </h5>
+                return (
+                  <Col key={job.id} lg={4} md={6}>
+                    <Card className="h-100 border-0 shadow-sm rounded-4 position-relative hover-shadow transition-all">
+                      <Card.Body className="d-flex flex-column p-4">
+                        {/* Top Row: Company & Source Badge */}
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <span className="fw-bold text-primary fs-5">{job.companyName}</span>
+                          <Badge bg="light" text="dark" className="border">
+                            {job.sourceProvider || 'ATS Verified'}
+                          </Badge>
+                        </div>
 
-                    {/* Location & Remote */}
-                    <div className="d-flex align-items-center flex-wrap gap-2 text-muted small mb-3">
-                      <span>📍 {job.location || 'India'}</span>
-                      {job.remote && (
-                        <Badge bg="success" className="rounded-pill">Remote</Badge>
-                      )}
-                      {job.department && (
-                        <span className="text-secondary">• {job.department}</span>
-                      )}
-                    </div>
+                        {/* Job Title */}
+                        <h5 className="fw-bold text-dark mb-2" style={{ lineHeight: '1.4' }}>
+                          {job.title}
+                        </h5>
 
-                    {/* Fresher & Experience Tag - Strictly 0-Year Only */}
-                    <div className="mb-3">
-                      <Badge bg="success" className="me-2 px-2 py-1">
-                        🎓 0 years experience
-                      </Badge>
-                      {job.employmentType && (
-                        <Badge bg="secondary" className="px-2 py-1">
-                          {job.employmentType}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Skills pills */}
-                    {job.skills && (
-                      <div className="d-flex flex-wrap gap-1 mb-4">
-                        {job.skills.split(',').slice(0, 4).map((s, idx) => (
-                          <span
-                            key={idx}
-                            className="badge bg-light text-secondary border fw-normal"
-                            style={{ fontSize: '0.75rem' }}
-                          >
-                            {s.trim()}
+                        {/* Location: City, State, India (Section 21) */}
+                        <div className="d-flex align-items-center flex-wrap gap-2 text-muted small mb-2">
+                          <span className="fw-semibold text-dark">
+                            📍 {displayLocation}
                           </span>
-                        ))}
-                      </div>
-                    )}
+                          <Badge bg="primary" className="px-2 py-1">
+                            🇮🇳 INDIA
+                          </Badge>
+                          {job.remote && (
+                            <Badge bg="info" text="dark" className="rounded-pill">Remote - India</Badge>
+                          )}
+                          {job.department && (
+                            <span className="text-secondary">• {job.department}</span>
+                          )}
+                        </div>
 
-                    {/* Card Footer: Timestamp & Direct Apply Button */}
-                    <div className="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
-                      <small className="text-muted" title={job.postedAt}>
-                        🕒 {formatTimeAgo(job.postedAt || job.lastVerifiedAt)}
-                      </small>
+                        {/* Experience: 0 years & Status: Verified (Section 21) */}
+                        <div className="d-flex align-items-center flex-wrap gap-2 mb-3">
+                          <Badge bg="success" className="px-2 py-1">
+                            Experience: 0 years
+                          </Badge>
+                          <Badge bg="success" className="px-2 py-1">
+                            Status: Verified
+                          </Badge>
+                          {job.employmentType && (
+                            <Badge bg="secondary" className="px-2 py-1">
+                              {job.employmentType}
+                            </Badge>
+                          )}
+                        </div>
 
-                      <a
-                        href={job.applicationUrl || job.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-primary btn-sm px-3 fw-bold rounded-pill"
-                      >
-                        Apply on Official Website ↗
-                      </a>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+                        {/* Skills pills */}
+                        {job.skills && (
+                          <div className="d-flex flex-wrap gap-1 mb-3">
+                            {job.skills.split(',').slice(0, 5).map((s, idx) => (
+                              <span
+                                key={idx}
+                                className="badge bg-light text-secondary border fw-normal"
+                                style={{ fontSize: '0.75rem' }}
+                              >
+                                {s.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Card Footer: Posted Date, Verified Date & Direct Apply Button (Section 21) */}
+                        <div className="mt-auto pt-3 border-top">
+                          <div className="d-flex justify-content-between text-muted small mb-2">
+                            <span>Posted: <strong>{job.postedAt ? new Date(job.postedAt).toLocaleDateString() : 'Recent'}</strong></span>
+                            <span>Verified: <strong>{job.lastVerifiedAt ? new Date(job.lastVerifiedAt).toLocaleDateString() : 'Today'}</strong></span>
+                          </div>
+                          <a
+                            href={job.applicationUrl || job.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-primary btn-sm w-100 fw-bold rounded-pill"
+                          >
+                            Apply ↗
+                          </a>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                );
+              })}
+            </Row>
+
+            {/* Section 17: No Foreign Fallback Message */}
+            <div className="text-center mt-4 mb-2">
+              <div className="alert alert-light border text-muted d-inline-block px-4 py-2 rounded-pill small shadow-sm">
+                No additional verified Indian fresher jobs are currently available.
+              </div>
+            </div>
+          </>
         )}
 
         {/* Empty State - Section 40 Requirement */}
