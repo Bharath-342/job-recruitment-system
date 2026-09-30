@@ -51,7 +51,14 @@ public class ExperienceRequirementParser {
             "graduates with no experience|" +
             "entry[ -]?level\\s+position\\s+with\\s+no\\s+experience\\s+required|" +
             "freshers?\\s+(?:can\\s+apply|eligible|welcome|encouraged|only)|" +
-            "fresh\\s+graduates?|recent\\s+graduates?|freshers?)\\b",
+            "fresh\\s+graduates?|recent\\s+graduates?|freshers?|" +
+            "college\\s+graduates?|campus\\s+hire|campus\\s+recruitment|new\\s+grad(?:uates?)?|" +
+            "(?:202[4-9]|2030)\\s+graduates?|batch\\s+of\\s+(?:202[4-9]|2030))\\b",
+            Pattern.CASE_INSENSITIVE);
+
+    // Entry-level title signals (Intern, Trainee, Graduate Trainee, Apprentice) per Section 8 & 36
+    private static final Pattern ENTRY_LEVEL_TITLE_PATTERN = Pattern.compile(
+            "\\b(intern|internship|trainee|apprentice|graduate\\s+engineer(?:\\s+trainee)?|graduate\\s+trainee|software\\s+trainee|developer\\s+trainee|entry[ -]?level)\\b",
             Pattern.CASE_INSENSITIVE);
 
     // Single year pattern check: e.g. "1 year experience", "2 years experience", "3 years"
@@ -85,6 +92,7 @@ public class ExperienceRequirementParser {
                 .replaceAll("(?i)\\bno\\s+(?:prior\\s+)?experience\\s+(?:required|needed|necessary)\\b", "__NO_EXP__");
 
         // 2. Check for Mandatory Prior Experience (1+ years, 2+ years, 1-3 years, etc.)
+        // Section 9 Conflict Rule: Takes priority over any title signal (e.g. Graduate + 2 yrs -> REJECT)
         Matcher mandatoryMatcher = MANDATORY_PRIOR_EXP_PATTERN.matcher(maskedText);
         if (mandatoryMatcher.find()) {
             String matchedSnippet = mandatoryMatcher.group();
@@ -145,10 +153,21 @@ public class ExperienceRequirementParser {
             );
         }
 
-        // 4. Job title checks (Rule 7: DO NOT TRUST JOB TITLES ALONE)
-        // If the title contains Intern / Trainee / Graduate / Entry Level, BUT description has NO explicit 0-year evidence:
-        // Do NOT classify as ELIGIBLE_ZERO_YEAR! Must classify as UNKNOWN.
-        // UNKNOWN is strictly rejected by the Fresher platform.
+        // 4. Entry-Level title signals where NO mandatory prior experience is demanded (Section 8 & 36)
+        Matcher entryLevelMatcher = ENTRY_LEVEL_TITLE_PATTERN.matcher(safeTitle);
+        if (entryLevelMatcher.find()) {
+            return new ParsedExperience(
+                    0,
+                    1,
+                    entryLevelMatcher.group(),
+                    90,
+                    EligibilityStatus.ELIGIBLE_ZERO_YEAR,
+                    "Verified 0-year entry-level / trainee / intern role: " + entryLevelMatcher.group()
+            );
+        }
+
+        // 5. Generic job titles without explicit 0-year evidence -> UNKNOWN
+        // Section 7 & 37: UNKNOWN is strictly rejected from the Fresher platform.
         return new ParsedExperience(
                 null,
                 null,

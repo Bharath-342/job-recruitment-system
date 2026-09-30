@@ -1,5 +1,6 @@
 package com.jobrecruitment.config;
 
+import com.jobrecruitment.security.CustomUserDetailsService;
 import com.jobrecruitment.security.JwtAuthenticationEntryPoint;
 import com.jobrecruitment.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,8 +67,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/recruiter/**").hasRole("RECRUITER")
                 // Job deletion (Recruiter or Admin)
                 .requestMatchers(HttpMethod.DELETE, "/api/jobs/**").hasAnyRole("RECRUITER", "ADMIN")
-                // Admin endpoints
-                .requestMatchers(HttpMethod.POST, "/api/jobs/sync").hasRole("ADMIN")
+                // Sync endpoint (Section 29: on-demand discovery and manual sync)
+                .requestMatchers(HttpMethod.POST, "/api/jobs/sync").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // All other API endpoints require authentication
                 .anyRequest().authenticated()
@@ -94,6 +95,16 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public org.springframework.security.authentication.dao.DaoAuthenticationProvider authenticationProvider(
+            CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+        org.springframework.security.authentication.dao.DaoAuthenticationProvider authProvider =
+                new org.springframework.security.authentication.dao.DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return authProvider;
     }
 
     @Bean

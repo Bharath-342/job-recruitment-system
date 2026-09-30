@@ -44,13 +44,18 @@ class Section28AutomatedTestCasesTest {
     }
 
     private boolean evaluateJob(String location, String expText) {
-        var decision = eligibilityService.evaluateEligibility("Software Engineer", expText, location);
+        return evaluateJobWithTitle("Software Engineer", location, expText);
+    }
+
+    private boolean evaluateJobWithTitle(String title, String location, String expText) {
+        var decision = eligibilityService.evaluateEligibility(title, expText, location);
         if (!decision.isEligible()) {
             return false;
         }
 
         // Also test the central entity checker (Section 12)
         AggregatedJob job = new AggregatedJob();
+        job.setTitle(title);
         job.setLocation(location);
         job.setCountry(decision.location().country());
         job.setLocationClassification(decision.location().classification());
@@ -153,6 +158,27 @@ class Section28AutomatedTestCasesTest {
     void test13_HyderabadIndiaUnknownExperience() {
         boolean passed = evaluateJob("Hyderabad, India", "Looking for talented passionate developers to join our team.");
         assertFalse(passed, "Hyderabad, India + unknown experience must FAIL");
+    }
+
+    @Test
+    @DisplayName("14. Pune, India + 0-1 years -> PASS (Section 35)")
+    void test14_PuneIndiaZeroToOneYears() {
+        boolean passed = evaluateJob("Pune, India", "Looking for candidates with 0-1 years of experience in Java / Python.");
+        assertTrue(passed, "Pune, India + 0-1 years must PASS");
+    }
+
+    @Test
+    @DisplayName("15. Section 9 Conflict Rule: Graduate Software Engineer + Minimum 2 years experience -> FAIL")
+    void test15_GraduateTitleWithTwoYearsExperienceConflict() {
+        boolean passed = evaluateJobWithTitle("Graduate Software Engineer", "Hyderabad, India", "Minimum 2 years experience required.");
+        assertFalse(passed, "Detailed experience requirement must override graduate title per Section 9");
+    }
+
+    @Test
+    @DisplayName("16. Bangalore + Software Engineer - Winter Intern -> PASS (Section 8 & 36)")
+    void test16_BangaloreWinterIntern() {
+        boolean passed = evaluateJobWithTitle("Software Engineer - Winter Intern", "Bangalore, India", "Bachelor's degree in Computer Science, 2026/2027 graduates. General-purpose languages Java/Python.");
+        assertTrue(passed, "Bangalore Winter Intern must PASS");
     }
 
     // ==========================================

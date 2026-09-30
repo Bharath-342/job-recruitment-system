@@ -44,6 +44,9 @@ class JobAggregationServiceTest {
     @Mock
     private com.jobrecruitment.classifier.FresherJobEligibilityService eligibilityService;
 
+    @Mock
+    private com.jobrecruitment.repository.JobDiscoveryRecordRepository jobDiscoveryRecordRepository;
+
     @InjectMocks
     private JobAggregationService aggregationService;
 

@@ -34,15 +34,18 @@ public class JobAggregationService {
     private final AggregatedJobRepository aggregatedJobRepository;
     private final JobProviderFactory providerFactory;
     private final com.jobrecruitment.classifier.FresherJobEligibilityService eligibilityService;
+    private final com.jobrecruitment.repository.JobDiscoveryRecordRepository jobDiscoveryRecordRepository;
 
     public JobAggregationService(CompanySourceRepository companySourceRepository,
                                  AggregatedJobRepository aggregatedJobRepository,
                                  JobProviderFactory providerFactory,
-                                 com.jobrecruitment.classifier.FresherJobEligibilityService eligibilityService) {
+                                 com.jobrecruitment.classifier.FresherJobEligibilityService eligibilityService,
+                                 com.jobrecruitment.repository.JobDiscoveryRecordRepository jobDiscoveryRecordRepository) {
         this.companySourceRepository = companySourceRepository;
         this.aggregatedJobRepository = aggregatedJobRepository;
         this.providerFactory = providerFactory;
         this.eligibilityService = eligibilityService;
+        this.jobDiscoveryRecordRepository = jobDiscoveryRecordRepository;
     }
 
     /**
@@ -149,9 +152,9 @@ public class JobAggregationService {
     }
 
     /**
-     * Scheduled synchronization running at configurable intervals (default: 6 hours).
+     * Scheduled synchronization running at configurable intervals (default: 30 minutes).
      */
-    @Scheduled(fixedDelayString = "${job.sync.interval:21600000}", initialDelay = 60000)
+    @Scheduled(fixedDelayString = "${job.sync.interval:1800000}", initialDelay = 15000)
     public void scheduledSync() {
         log.info("Starting scheduled fresher job synchronization...");
         syncAllSources();
@@ -244,22 +247,37 @@ public class JobAggregationService {
                 fresherCount++;
                 log.info("APPROVED Indian Fresher Job: [{}] {} in {}", normalized.getCompanyName(), normalized.getTitle(), normalized.getLocation());
             } else {
-                // Rejection logging per Section 25
+                String rejectionReason = "UNKNOWN";
                 if (normalized.getLocationClassification() == LocationClassification.NON_INDIA) {
+                    rejectionReason = "FOREIGN_COUNTRY";
                     log.info("REJECTED_FOREIGN_COUNTRY: [{}] {} in {}", normalized.getCompanyName(), normalized.getTitle(), normalized.getLocation());
                     summary.setJobsRejectedForeign(summary.getJobsRejectedForeign() + 1);
                 } else if (normalized.getLocationClassification() == LocationClassification.UNKNOWN) {
+                    rejectionReason = "UNKNOWN_COUNTRY";
                     log.info("REJECTED_UNKNOWN_COUNTRY: [{}] {} in {}", normalized.getCompanyName(), normalized.getTitle(), normalized.getLocation());
                     summary.setJobsRejectedLocationUnknown(summary.getJobsRejectedLocationUnknown() + 1);
-                }
-
-                if (normalized.getEligibilityStatus() == EligibilityStatus.NOT_ELIGIBLE) {
+                } else if (normalized.getEligibilityStatus() == EligibilityStatus.NOT_ELIGIBLE) {
+                    rejectionReason = "EXPERIENCE_REQUIRED";
                     log.info("REJECTED_EXPERIENCE_REQUIRED: [{}] {} requiring {} yrs", normalized.getCompanyName(), normalized.getTitle(), normalized.getMinimumExperienceYears());
                     summary.setJobsRejectedExperienceGreaterThanZero(summary.getJobsRejectedExperienceGreaterThanZero() + 1);
                 } else if (normalized.getEligibilityStatus() == EligibilityStatus.UNKNOWN) {
+                    rejectionReason = "UNKNOWN_EXPERIENCE";
                     log.info("REJECTED_UNKNOWN_EXPERIENCE: [{}] {}", normalized.getCompanyName(), normalized.getTitle());
                     summary.setJobsRejectedExperienceUnknown(summary.getJobsRejectedExperienceUnknown() + 1);
                 }
+
+                // Section 20: Keep rejected jobs in JobDiscoveryRecord
+                try {
+                    jobDiscoveryRecordRepository.save(new com.jobrecruitment.entity.JobDiscoveryRecord(
+                            normalized.getSourceProvider(),
+                            normalized.getExternalJobId(),
+                            normalized.getCompanyName(),
+                            normalized.getTitle(),
+                            normalized.getLocation(),
+                            normalized.getExperienceText(),
+                            rejectionReason
+                    ));
+                } catch (Exception ignored) {}
             }
 
             // Deduplication strategy
@@ -277,6 +295,17 @@ public class JobAggregationService {
                     existingOpt = Optional.of(matches.get(0));
                     log.info("REJECTED_DUPLICATE: [{}] {} matches existing ID {}", normalized.getCompanyName(), normalized.getTitle(), matches.get(0).getId());
                     summary.setDuplicatesDetected(summary.getDuplicatesDetected() + 1);
+                    try {
+                        jobDiscoveryRecordRepository.save(new com.jobrecruitment.entity.JobDiscoveryRecord(
+                                normalized.getSourceProvider(),
+                                normalized.getExternalJobId(),
+                                normalized.getCompanyName(),
+                                normalized.getTitle(),
+                                normalized.getLocation(),
+                                normalized.getExperienceText(),
+                                "DUPLICATE"
+                        ));
+                    } catch (Exception ignored) {}
                 }
             }
 
@@ -323,6 +352,17 @@ public class JobAggregationService {
                 existing.setLastVerifiedAt(LocalDateTime.now());
                 aggregatedJobRepository.save(existing);
                 summary.setJobsDeactivated(summary.getJobsDeactivated() + 1);
+                try {
+                    jobDiscoveryRecordRepository.save(new com.jobrecruitment.entity.JobDiscoveryRecord(
+                            existing.getSourceProvider(),
+                            existing.getExternalJobId(),
+                            existing.getCompanyName(),
+                            existing.getTitle(),
+                            existing.getLocation(),
+                            existing.getExperienceText(),
+                            "EXPIRED"
+                    ));
+                } catch (Exception ignored) {}
             }
         }
 

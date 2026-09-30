@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -227,29 +228,42 @@ public class DataInitializer implements CommandLineRunner {
 
         // 7. Seed curated verified company sources with active India hiring
         List<CompanySource> defaultSources = List.of(
-            new CompanySource("Canonical", "https://canonical.com/careers", "GREENHOUSE", "canonical", "India"),
-            new CompanySource("ThoughtWorks", "https://www.thoughtworks.com/careers", "GREENHOUSE", "thoughtworks", "India"),
-            new CompanySource("InMobi", "https://www.inmobi.com/company/careers", "GREENHOUSE", "inmobi", "India"),
-            new CompanySource("Groww", "https://groww.in/careers", "GREENHOUSE", "groww", "India"),
             new CompanySource("Rubrik", "https://www.rubrik.com/company/careers", "GREENHOUSE", "rubrik", "India"),
+            new CompanySource("Tower Research Capital", "https://www.tower-research.com/careers", "GREENHOUSE", "towerresearchcapital", "India"),
+            new CompanySource("Point72", "https://point72.com/careers", "GREENHOUSE", "point72", "India"),
+            new CompanySource("IMC Trading", "https://careers.imc.com", "GREENHOUSE", "imc", "India"),
+            new CompanySource("WorldQuant", "https://www.worldquant.com/careers", "GREENHOUSE", "worldquant", "India"),
+            new CompanySource("Groww", "https://groww.in/careers", "GREENHOUSE", "groww", "India"),
+            new CompanySource("InMobi", "https://www.inmobi.com/company/careers", "GREENHOUSE", "inmobi", "India"),
             new CompanySource("MongoDB", "https://www.mongodb.com/careers", "GREENHOUSE", "mongodb", "India"),
-            new CompanySource("Datadog", "https://careers.datadoghq.com", "GREENHOUSE", "datadog", "India"),
+            new CompanySource("ThoughtWorks", "https://www.thoughtworks.com/careers", "GREENHOUSE", "thoughtworks", "India"),
+            new CompanySource("HackerRank", "https://www.hackerrank.com/careers", "GREENHOUSE", "hackerrank", "India"),
             new CompanySource("Elastic", "https://jobs.elastic.co", "GREENHOUSE", "elastic", "India"),
             new CompanySource("Stripe", "https://stripe.com/jobs", "GREENHOUSE", "stripe", "India"),
-            new CompanySource("Cloudflare", "https://www.cloudflare.com/careers", "GREENHOUSE", "cloudflare", "India"),
+            new CompanySource("Datadog", "https://careers.datadoghq.com", "GREENHOUSE", "datadog", "India"),
             new CompanySource("Twilio", "https://www.twilio.com/company/jobs", "GREENHOUSE", "twilio", "India"),
-            new CompanySource("Toast", "https://careers.toasttab.com", "GREENHOUSE", "toasttab", "India")
+            new CompanySource("Cloudflare", "https://www.cloudflare.com/careers", "GREENHOUSE", "cloudflare", "India"),
+            new CompanySource("New Relic", "https://newrelic.com/about/careers", "GREENHOUSE", "newrelic", "India"),
+            new CompanySource("Sumo Logic", "https://www.sumologic.com/company/careers", "GREENHOUSE", "sumologic", "India"),
+            new CompanySource("LaunchDarkly", "https://launchdarkly.com/careers", "GREENHOUSE", "launchdarkly", "India"),
+            new CompanySource("Groupon", "https://www.grouponcareers.com", "GREENHOUSE", "groupon", "India"),
+            new CompanySource("Navi", "https://navi.com/careers", "ASHBY", "navi", "India")
         );
 
         for (CompanySource src : defaultSources) {
-            if (!companySourceRepository.existsByProviderAndProviderIdentifier(src.getProvider(), src.getProviderIdentifier())) {
+            Optional<CompanySource> existingSrc = companySourceRepository.findByProviderAndProviderIdentifier(src.getProvider(), src.getProviderIdentifier());
+            if (existingSrc.isEmpty()) {
                 companySourceRepository.save(src);
+            } else {
+                CompanySource s = existingSrc.get();
+                s.setEnabled(true);
+                companySourceRepository.save(s);
             }
         }
 
-        // 8. Disable foreign-only sources that may have been seeded previously
+        // 8. Disable foreign-only sources that do not have verified India hiring
         List<String> foreignIdentifiers = List.of(
-            "gitlab", "figma", "coinbase", "samsara", "databricks", "okta",
+            "gitlab", "coinbase", "samsara", "databricks", "okta",
             "pinterest", "brex", "reddit", "affirm", "discord", "miro",
             "hashicorp", "palantir", "spotify", "netflix", "canva",
             "sentry", "ramp", "linear"
@@ -312,10 +326,10 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Completed retroactive audit (Section 13). Inspected {} jobs, deactivated/rectified {}, active verified Indian fresher jobs {}.",
                 allExisting.size(), rectifiedCount, activeFreshersCount);
 
-        // 10. Background synchronization after startup stabilization
+        // 10. Background synchronization after startup stabilization (runs after 15s)
         new Thread(() -> {
             try {
-                Thread.sleep(60_000);
+                Thread.sleep(15_000);
                 log.info("Starting initial job synchronization after startup delay...");
                 jobAggregationService.syncAllSources();
             } catch (Exception e) {

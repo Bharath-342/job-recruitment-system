@@ -8,6 +8,8 @@ export default function FresherJobs() {
   const [error, setError] = useState('');
   const [stats, setStats] = useState(null);
   const [companies, setCompanies] = useState([]);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
 
   // Search & Filter state
   const [keyword, setKeyword] = useState('');
@@ -70,6 +72,24 @@ export default function FresherJobs() {
       setCompanies(res.data || []);
     } catch (err) {
       console.error('Failed to load companies:', err);
+    }
+  };
+
+  // Trigger manual synchronization (Section 29)
+  const handleSyncNow = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fresherJobService.triggerSync();
+      setSyncResult(res.data);
+      await fetchStatistics();
+      await fetchCompanies();
+      await fetchJobs(0);
+    } catch (err) {
+      console.error('Failed to trigger synchronization:', err);
+      setError('Unable to trigger synchronization. Please try again.');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -221,11 +241,42 @@ export default function FresherJobs() {
                       Last Verified: <strong>{formatTimeAgo(stats.lastSyncedAt)}</strong>
                     </div>
                   )}
+
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    className="w-100 mt-2 fw-semibold rounded-pill"
+                    onClick={handleSyncNow}
+                    disabled={syncing}
+                  >
+                    {syncing ? (
+                      <>
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        Discovering Jobs...
+                      </>
+                    ) : (
+                      '🔄 Sync Jobs Now'
+                    )}
+                  </Button>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
         </div>
+
+        {/* Sync Summary Alert (Section 29) */}
+        {syncResult && (
+          <Alert variant="info" dismissible onClose={() => setSyncResult(null)} className="rounded-4 shadow-sm mb-4 border-info bg-white">
+            <div className="d-flex align-items-center gap-2 mb-1 text-primary">
+              <span className="fs-5">🔄</span>
+              <strong className="fs-6">Live Synchronization & Discovery Report</strong>
+            </div>
+            <div className="small text-muted">
+              Scanned <strong>{syncResult.totalJobsDiscovered}</strong> positions across <strong>{syncResult.sourcesProcessed}</strong> company boards.
+              Discovered <strong>{syncResult.jobsFromIndia}</strong> in India | Added <strong>{syncResult.jobsInserted}</strong> new 0-year fresher jobs | Updated <strong>{syncResult.jobsUpdated}</strong> | Deactivated <strong>{syncResult.jobsDeactivated}</strong> expired | Excluded <strong>{syncResult.jobsRejectedForeign}</strong> foreign & <strong>{syncResult.jobsRejectedExperienceGreaterThanZero}</strong> experienced.
+            </div>
+          </Alert>
+        )}
 
         {/* Quick Role Filters */}
         <div className="mb-4">
