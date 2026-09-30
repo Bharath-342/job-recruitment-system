@@ -263,9 +263,10 @@ public class JobAggregationService {
             }
 
             // Deduplication strategy
-            // 1. By provider + externalJobId
-            Optional<AggregatedJob> existingOpt = aggregatedJobRepository
+            // 1. By provider + externalJobId (returns List to avoid crash on existing duplicates)
+            List<AggregatedJob> existingByProviderAndId = aggregatedJobRepository
                     .findBySourceProviderAndExternalJobId(normalized.getSourceProvider(), normalized.getExternalJobId());
+            Optional<AggregatedJob> existingOpt = existingByProviderAndId.isEmpty() ? Optional.empty() : Optional.of(existingByProviderAndId.get(0));
 
             // 2. Fallback deduplication by company + title + location (returns List to avoid unique-result crash)
             if (existingOpt.isEmpty()) {

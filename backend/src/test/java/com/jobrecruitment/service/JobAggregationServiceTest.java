@@ -98,7 +98,7 @@ class JobAggregationServiceTest {
         aggJob.setActive(true);
         when(mockProvider.normalize(any(), eq(source1))).thenReturn(aggJob);
         when(eligibilityService.isEligibleForIndianFreshers(any())).thenReturn(true);
-        when(aggregatedJobRepository.findBySourceProviderAndExternalJobId("GREENHOUSE", "101")).thenReturn(Optional.empty());
+        when(aggregatedJobRepository.findBySourceProviderAndExternalJobId("GREENHOUSE", "101")).thenReturn(java.util.Collections.emptyList());
 
         // Source 2 fails with exception (e.g. timeout / 429)
         when(providerFactory.getProvider("LEVER")).thenThrow(new RuntimeException("Connection timeout"));

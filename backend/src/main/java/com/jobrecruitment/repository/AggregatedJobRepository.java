@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface AggregatedJobRepository extends JpaRepository<AggregatedJob, Long>, JpaSpecificationExecutor<AggregatedJob> {
 
-    Optional<AggregatedJob> findBySourceProviderAndExternalJobId(String sourceProvider, String externalJobId);
+    List<AggregatedJob> findBySourceProviderAndExternalJobId(String sourceProvider, String externalJobId);
 
     List<AggregatedJob> findByCompanyNameIgnoreCaseAndTitleIgnoreCaseAndLocationIgnoreCase(
             String companyName, String title, String location);
