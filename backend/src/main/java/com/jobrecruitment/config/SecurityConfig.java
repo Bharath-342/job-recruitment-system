@@ -48,10 +48,11 @@ public class SecurityConfig {
             .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
+                // Allow frontend static assets & SPA routes (non-API requests)
+                .requestMatchers(request -> !request.getRequestURI().startsWith("/api")).permitAll()
+                // Public API endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/jobs/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/error").permitAll()
                 // Candidate endpoints
                 .requestMatchers(HttpMethod.POST, "/api/jobs/*/applications").hasRole("CANDIDATE")
@@ -66,7 +67,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/jobs/**").hasAnyRole("RECRUITER", "ADMIN")
                 // Admin endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                // All other endpoints require authentication
+                // All other API endpoints require authentication
                 .anyRequest().authenticated()
             );
 
