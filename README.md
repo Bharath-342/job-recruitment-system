@@ -200,15 +200,34 @@ The system facilitates end-to-end recruitment workflows supporting three distinc
 
 ## 🧪 Testing Suite & Results
 
-The project features a **39-test automated test suite** with 100% pass rate:
-- **Unit Tests (20 tests)**:
-  - `AuthServiceTest` (5 tests): candidate registration, recruiter registration, duplicate email handling, login validation, BadCredentials handling.
-  - `JobServiceTest` (6 tests): job creation, ownership validation, closed job updates, job closing, non-existent job handling, unauthorized deletion.
-  - `ApplicationServiceTest` (9 tests): job application, duplicate prevention, closed job check, valid and invalid status transitions, application withdrawal rules.
-- **Spring Boot Controller & Integration Tests (19 tests)**:
-  - `AuthControllerIntegrationTest` (6 tests): registration, duplicate conflict responses, validation error payloads, login tokens, invalid password rejections.
-  - `JobControllerIntegrationTest` (8 tests): public search, keyword & location filtering, 404 for non-existent jobs, 401 unauthorized requests, 403 forbidden for candidates creating jobs, recruiter creation success, validation errors.
-  - `ApplicationControllerIntegrationTest` (5 tests): candidate submission, duplicate application rejection (`409 Conflict`), recruiter forbidden from applying (`403 Forbidden`), candidate dashboard stats, admin protection.
+The project features a **69-test automated test suite** with 100% pass rate:
+- **Strict 0-Year Experience Parser Tests (`ExperienceRequirementParserTest`, 13 tests)**:
+  - `Java Developer - 0 years` ➔ `ELIGIBLE_ZERO_YEAR` (min: 0)
+  - `Java Developer - 0-1 years` ➔ `ELIGIBLE_ZERO_YEAR` (min: 0)
+  - `Graduate Software Engineer` (no experience required) ➔ `ELIGIBLE_ZERO_YEAR` (min: 0)
+  - `Fresh graduates encouraged` (no prior experience) ➔ `ELIGIBLE_ZERO_YEAR` (min: 0)
+  - `Software Engineer - 1+ years` ➔ `NOT_ELIGIBLE` (min: 1)
+  - `Java Developer - 2 years` ➔ `NOT_ELIGIBLE` (min: 2)
+  - `Backend Developer - 3 years` ➔ `NOT_ELIGIBLE` (min: 3)
+  - `Senior Java Developer` ➔ `NOT_ELIGIBLE` (Senior title exclusion)
+  - `Software Engineer - 5+ years` ➔ `NOT_ELIGIBLE` (min: 5)
+  - `Software Engineer` (no experience info) ➔ `UNKNOWN` (Excluded from public fresher feed)
+  - `Associate Software Engineer` (2 years required) ➔ `NOT_ELIGIBLE` (min: 2)
+  - `Graduate Engineer` (1 year mandatory) ➔ `NOT_ELIGIBLE` (min: 1)
+  - Conflicting requirements (`0-1 years` AND `2 years mandatory`) ➔ `NOT_ELIGIBLE` (Strictest mandatory requirement wins)
+- **Classifier & Providers Tests (15 tests)**:
+  - `FresherJobClassifierTest` (9 tests)
+  - `GreenhouseJobProviderTest` (2 tests)
+  - `LeverJobProviderTest` (2 tests)
+  - `AshbyJobProviderTest` (2 tests)
+- **Services & Controllers Integration Tests (41 tests)**:
+  - `JobAggregationServiceTest` (2 tests)
+  - `AuthServiceTest` (5 tests)
+  - `JobServiceTest` (6 tests)
+  - `ApplicationServiceTest` (9 tests)
+  - `AuthControllerIntegrationTest` (6 tests)
+  - `JobControllerIntegrationTest` (8 tests)
+  - `ApplicationControllerIntegrationTest` (5 tests)
 
 ### Running Automated Tests
 ```bash
@@ -218,12 +237,22 @@ cd backend
 
 ---
 
+## 🌐 Live Deployment & Verified URLs
+
+- **Live Web Application (Frontend & Backend)**: `https://job-recruitment-system-rzmv.onrender.com/`
+- **Fresher Job Feed**: `https://job-recruitment-system-rzmv.onrender.com/fresher-jobs`
+- **Companies Hiring Freshers**: `https://job-recruitment-system-rzmv.onrender.com/companies`
+- **Swagger UI**: `https://job-recruitment-system-rzmv.onrender.com/swagger-ui.html`
+- **OpenAPI JSON**: `https://job-recruitment-system-rzmv.onrender.com/api-docs`
+
+---
+
 ## 💻 Local Setup & Execution
 
 ### Prerequisites
 - **JDK 21** or newer
 - **Node.js** v20+ and **npm**
-- **MySQL 8.0** running locally or in Docker
+- **MySQL 8.0** or PostgreSQL
 
 ### 1. Database Setup
 ```sql
@@ -233,10 +262,12 @@ CREATE DATABASE IF NOT EXISTS job_recruitment_db;
 ### 2. Backend Setup
 ```bash
 cd backend
-# Set environment variables or rely on application.properties defaults:
-# DB_URL=jdbc:mysql://localhost:3306/job_recruitment_db
-# DB_USERNAME=root
-# DB_PASSWORD=your_password
+# Set environment variables:
+# DATABASE_URL=jdbc:mysql://localhost:3306/job_recruitment_db
+# DATABASE_USERNAME=root
+# DATABASE_PASSWORD=your_password
+# JWT_SECRET=your_jwt_secret_key_at_least_256_bits
+# JOB_SYNC_INTERVAL=14400000
 
 ./mvnw spring-boot:run
 ```
@@ -257,7 +288,7 @@ The frontend starts at `http://localhost:5173`.
 
 | Role | Email | Password | Pre-seeded Features |
 |---|---|---|---|
-| **ADMIN** | `admin@jobrecruitment.com` | `Admin@123` | System stats, manage users, remove jobs |
+| **ADMIN** | `admin@jobrecruitment.com` | `Admin@123` | System stats, manage users, sync trigger |
 | **RECRUITER** | `recruiter@techcorp.com` | `Recruiter@123` | TechCorp Global profile, 4 active jobs, applicants |
 | **CANDIDATE** | `candidate@dev.com` | `Candidate@123` | Java/React skills, resume, 1 active application |
 

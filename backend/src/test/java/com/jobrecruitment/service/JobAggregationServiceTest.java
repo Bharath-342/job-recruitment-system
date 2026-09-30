@@ -58,10 +58,10 @@ class JobAggregationServiceTest {
     @Test
     @DisplayName("Get verified statistics calculates unique companies hiring freshers")
     void testGetStatistics() {
-        when(aggregatedJobRepository.countByIsActiveTrueAndIsFresherTrue()).thenReturn(15L);
+        when(aggregatedJobRepository.countStrictFresherJobs()).thenReturn(15L);
         when(aggregatedJobRepository.countDistinctCompaniesHiringFreshers()).thenReturn(6L);
         when(aggregatedJobRepository.countDistinctLocationsHiringFreshers()).thenReturn(4L);
-        when(aggregatedJobRepository.countByIsActiveTrueAndIsFresherTrueAndRemoteTrue()).thenReturn(3L);
+        when(aggregatedJobRepository.countStrictRemoteFresherJobs()).thenReturn(3L);
         when(aggregatedJobRepository.findLatestVerificationTimestamp()).thenReturn(LocalDateTime.now());
 
         JobStatisticsResponse stats = aggregationService.getStatistics();

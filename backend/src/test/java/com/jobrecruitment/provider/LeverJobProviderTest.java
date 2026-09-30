@@ -20,6 +20,7 @@ class LeverJobProviderTest {
         provider = new LeverJobProvider(
                 new ObjectMapper(),
                 new FresherJobClassifier(),
+                new com.jobrecruitment.classifier.FresherEligibilityService(new com.jobrecruitment.classifier.ExperienceRequirementParser()),
                 new SkillRelevanceExtractor()
         );
     }
@@ -43,7 +44,7 @@ class LeverJobProviderTest {
         raw.setSourceJobId("lever-999");
         raw.setSourceProvider("LEVER");
         raw.setTitle("Junior Software Engineer - Core Infrastructure");
-        raw.setDescription("Entry level position. Java, REST API, SQL skills.");
+        raw.setDescription("Entry level position. No prior experience required. Java, REST API, SQL skills.");
         raw.setLocation("Bengaluru, India");
         raw.setCountry("India");
         raw.setApplicationUrl("https://jobs.lever.co/palantir/lever-999");
@@ -55,6 +56,8 @@ class LeverJobProviderTest {
         assertEquals("Palantir", job.getCompanyName());
         assertEquals("https://jobs.lever.co/palantir/lever-999", job.getApplicationUrl());
         assertTrue(job.isFresher());
+        assertEquals(com.jobrecruitment.entity.EligibilityStatus.ELIGIBLE_ZERO_YEAR, job.getEligibilityStatus());
+        assertEquals(0, job.getMinimumExperienceYears());
         assertTrue(job.getSkills().contains("Java"));
     }
 }

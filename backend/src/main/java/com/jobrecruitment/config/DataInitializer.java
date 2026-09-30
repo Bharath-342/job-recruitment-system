@@ -207,36 +207,57 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // 7. Seed official verified company sources for Fresher Job Aggregation
-        if (companySourceRepository.count() == 0) {
-            List<CompanySource> sources = List.of(
-                new CompanySource("Canonical", "https://canonical.com/careers", "GREENHOUSE", "canonical", "India"),
-                new CompanySource("ThoughtWorks", "https://www.thoughtworks.com/careers", "GREENHOUSE", "thoughtworks", "India"),
-                new CompanySource("InMobi", "https://www.inmobi.com/company/careers", "GREENHOUSE", "inmobi", "India"),
-                new CompanySource("Groww", "https://groww.in/careers", "GREENHOUSE", "groww", "India"),
-                new CompanySource("Rubrik", "https://www.rubrik.com/company/careers", "GREENHOUSE", "rubrik", "India"),
-                new CompanySource("MongoDB", "https://www.mongodb.com/careers", "GREENHOUSE", "mongodb", "India"),
-                new CompanySource("Datadog", "https://careers.datadoghq.com", "GREENHOUSE", "datadog", "India"),
-                new CompanySource("Elastic", "https://jobs.elastic.co", "GREENHOUSE", "elastic", "India"),
-                new CompanySource("Stripe", "https://stripe.com/jobs", "GREENHOUSE", "stripe", "India"),
-                new CompanySource("Cloudflare", "https://www.cloudflare.com/careers", "GREENHOUSE", "cloudflare", "India"),
-                new CompanySource("Palantir", "https://www.palantir.com/careers", "LEVER", "palantir", "Global"),
-                new CompanySource("Spotify", "https://www.lifeatspotify.com", "LEVER", "spotify", "Global"),
-                new CompanySource("Sentry", "https://sentry.io/careers", "ASHBY", "sentry", "Global"),
-                new CompanySource("Ramp", "https://ramp.com/careers", "ASHBY", "ramp", "Global")
-            );
-            companySourceRepository.saveAll(sources);
+        // 7. Seed official verified company sources for Fresher Job Aggregation (30+ verified companies)
+        List<CompanySource> defaultSources = List.of(
+            new CompanySource("Canonical", "https://canonical.com/careers", "GREENHOUSE", "canonical", "India"),
+            new CompanySource("ThoughtWorks", "https://www.thoughtworks.com/careers", "GREENHOUSE", "thoughtworks", "India"),
+            new CompanySource("InMobi", "https://www.inmobi.com/company/careers", "GREENHOUSE", "inmobi", "India"),
+            new CompanySource("Groww", "https://groww.in/careers", "GREENHOUSE", "groww", "India"),
+            new CompanySource("Rubrik", "https://www.rubrik.com/company/careers", "GREENHOUSE", "rubrik", "India"),
+            new CompanySource("MongoDB", "https://www.mongodb.com/careers", "GREENHOUSE", "mongodb", "India"),
+            new CompanySource("Datadog", "https://careers.datadoghq.com", "GREENHOUSE", "datadog", "India"),
+            new CompanySource("Elastic", "https://jobs.elastic.co", "GREENHOUSE", "elastic", "India"),
+            new CompanySource("Stripe", "https://stripe.com/jobs", "GREENHOUSE", "stripe", "India"),
+            new CompanySource("Cloudflare", "https://www.cloudflare.com/careers", "GREENHOUSE", "cloudflare", "India"),
+            new CompanySource("GitLab", "https://about.gitlab.com/jobs", "GREENHOUSE", "gitlab", "Global"),
+            new CompanySource("Figma", "https://www.figma.com/careers", "GREENHOUSE", "figma", "Global"),
+            new CompanySource("Coinbase", "https://www.coinbase.com/careers", "GREENHOUSE", "coinbase", "Global"),
+            new CompanySource("Twilio", "https://www.twilio.com/company/jobs", "GREENHOUSE", "twilio", "India"),
+            new CompanySource("Samsara", "https://www.samsara.com/careers", "GREENHOUSE", "samsara", "Global"),
+            new CompanySource("Databricks", "https://www.databricks.com/company/careers", "GREENHOUSE", "databricks", "Global"),
+            new CompanySource("Okta", "https://www.okta.com/company/careers", "GREENHOUSE", "okta", "Global"),
+            new CompanySource("Pinterest", "https://www.pinterestcareers.com", "GREENHOUSE", "pinterest", "Global"),
+            new CompanySource("Brex", "https://www.brex.com/careers", "GREENHOUSE", "brex", "Global"),
+            new CompanySource("Reddit", "https://www.redditinc.com/careers", "GREENHOUSE", "reddit", "Global"),
+            new CompanySource("Affirm", "https://www.affirm.com/careers", "GREENHOUSE", "affirm", "Global"),
+            new CompanySource("Discord", "https://discord.com/careers", "GREENHOUSE", "discord", "Global"),
+            new CompanySource("Miro", "https://miro.com/careers", "GREENHOUSE", "miro", "Global"),
+            new CompanySource("Toast", "https://careers.toasttab.com", "GREENHOUSE", "toasttab", "India"),
+            new CompanySource("HashiCorp", "https://www.hashicorp.com/careers", "GREENHOUSE", "hashicorp", "Global"),
+            new CompanySource("Palantir", "https://www.palantir.com/careers", "LEVER", "palantir", "Global"),
+            new CompanySource("Spotify", "https://www.lifeatspotify.com", "LEVER", "spotify", "Global"),
+            new CompanySource("Netflix", "https://jobs.netflix.com", "LEVER", "netflix", "Global"),
+            new CompanySource("Canva", "https://www.lifeatcanva.com", "LEVER", "canva", "Global"),
+            new CompanySource("Sentry", "https://sentry.io/careers", "ASHBY", "sentry", "Global"),
+            new CompanySource("Ramp", "https://ramp.com/careers", "ASHBY", "ramp", "Global"),
+            new CompanySource("Linear", "https://linear.app/careers", "ASHBY", "linear", "Global")
+        );
 
-            // Trigger initial live synchronization in background
-            new Thread(() -> {
-                try {
-                    Thread.sleep(3000);
-                    jobAggregationService.syncAllSources();
-                } catch (Exception e) {
-                    // Handled internally in aggregation service
-                }
-            }).start();
+        for (CompanySource src : defaultSources) {
+            if (!companySourceRepository.existsByProviderAndProviderIdentifier(src.getProvider(), src.getProviderIdentifier())) {
+                companySourceRepository.save(src);
+            }
         }
+
+        // Trigger initial live synchronization in background after boot
+        new Thread(() -> {
+            try {
+                Thread.sleep(4000);
+                jobAggregationService.syncAllSources();
+            } catch (Exception e) {
+                // Handled internally in aggregation service
+            }
+        }).start();
     }
 
     private Skill getOrCreateSkill(String name) {

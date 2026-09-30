@@ -24,17 +24,20 @@ export default function Navbar() {
   return (
     <BSNavbar bg="dark" variant="dark" expand="lg" sticky="top" className="shadow-sm">
       <Container>
-        <BSNavbar.Brand as={Link} to="/" className="fw-bold">
-          <span style={{ color: '#6c5ce7' }}>Job</span>Recruit
+        <BSNavbar.Brand as={Link} to="/" className="fw-bold fs-4 d-flex align-items-center gap-1">
+          <span style={{ color: '#00b894' }}>FreshStart</span>
+          <span className="text-white">Jobs</span>
+          <Badge bg="success" className="ms-1" style={{ fontSize: '0.6rem' }}>0-EXP</Badge>
         </BSNavbar.Brand>
         <BSNavbar.Toggle />
         <BSNavbar.Collapse>
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/jobs">Browse Jobs</Nav.Link>
             <Nav.Link as={Link} to="/fresher-jobs" className="fw-bold text-warning d-flex align-items-center gap-1">
               <span>Fresher Jobs</span>
-              <Badge bg="warning" text="dark" pill style={{ fontSize: '0.65rem' }}>LIVE</Badge>
+              <Badge bg="warning" text="dark" pill style={{ fontSize: '0.65rem' }}>0-YR ONLY</Badge>
             </Nav.Link>
+            <Nav.Link as={Link} to="/companies" className="fw-semibold text-light">Companies</Nav.Link>
+            <Nav.Link as={Link} to="/jobs" className="text-secondary">All Jobs</Nav.Link>
             {isAuthenticated() && (
               <Nav.Link as={Link} to={getDashboardLink()}>Dashboard</Nav.Link>
             )}

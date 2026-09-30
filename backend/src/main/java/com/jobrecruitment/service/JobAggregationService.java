@@ -96,10 +96,10 @@ public class JobAggregationService {
      */
     @Transactional(readOnly = true)
     public JobStatisticsResponse getStatistics() {
-        long totalActive = aggregatedJobRepository.countByIsActiveTrueAndIsFresherTrue();
+        long totalActive = aggregatedJobRepository.countStrictFresherJobs();
         long uniqueCompanies = aggregatedJobRepository.countDistinctCompaniesHiringFreshers();
         long locations = aggregatedJobRepository.countDistinctLocationsHiringFreshers();
-        long remoteJobs = aggregatedJobRepository.countByIsActiveTrueAndIsFresherTrueAndRemoteTrue();
+        long remoteJobs = aggregatedJobRepository.countStrictRemoteFresherJobs();
         LocalDateTime latest = aggregatedJobRepository.findLatestVerificationTimestamp();
 
         return new JobStatisticsResponse(totalActive, uniqueCompanies, locations, remoteJobs,
@@ -112,6 +112,14 @@ public class JobAggregationService {
     @Transactional(readOnly = true)
     public List<String> getCompaniesHiringFreshers() {
         return aggregatedJobRepository.findDistinctCompaniesHiringFreshers();
+    }
+
+    /**
+     * Return paginated directory of companies currently hiring freshers.
+     */
+    @Transactional(readOnly = true)
+    public Page<CompanyDirectoryItemDto> getCompaniesDirectory(Pageable pageable) {
+        return aggregatedJobRepository.findCompaniesHiringFreshers(pageable);
     }
 
     /**
@@ -218,6 +226,10 @@ public class JobAggregationService {
 
             if (normalized.isFresher()) {
                 fresherCount++;
+            } else if (normalized.getEligibilityStatus() == com.jobrecruitment.entity.EligibilityStatus.NOT_ELIGIBLE) {
+                summary.setJobsRejectedExperienceGreaterThanZero(summary.getJobsRejectedExperienceGreaterThanZero() + 1);
+            } else {
+                summary.setJobsRejectedExperienceUnknown(summary.getJobsRejectedExperienceUnknown() + 1);
             }
 
             // Deduplication strategy
@@ -248,6 +260,8 @@ public class JobAggregationService {
                 existing.setRemote(normalized.isRemote());
                 existing.setExperienceLevel(normalized.getExperienceLevel());
                 existing.setFresher(normalized.isFresher());
+                existing.setEligibilityStatus(normalized.getEligibilityStatus());
+                existing.setMinimumExperienceYears(normalized.getMinimumExperienceYears());
                 existing.setFresherConfidence(normalized.getFresherConfidence());
                 existing.setSkills(normalized.getSkills());
                 existing.setActive(true);

@@ -12,10 +12,13 @@ public class SpaWebController {
     @GetMapping(value = {
         "/login",
         "/register",
+        "/register/**",
         "/jobs",
         "/jobs/**",
         "/fresher-jobs",
         "/fresher-jobs/**",
+        "/companies",
+        "/companies/**",
         "/candidate/**",
         "/recruiter/**",
         "/admin/**",

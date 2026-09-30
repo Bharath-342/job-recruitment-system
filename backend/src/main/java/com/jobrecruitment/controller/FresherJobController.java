@@ -89,6 +89,15 @@ public class FresherJobController {
         return ResponseEntity.ok(aggregationService.getCompaniesHiringFreshers());
     }
 
+    @GetMapping("/companies/directory")
+    @Operation(summary = "Get paginated directory of verified companies currently hiring freshers")
+    public ResponseEntity<Page<CompanyDirectoryItemDto>> getCompaniesDirectory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(aggregationService.getCompaniesDirectory(pageable));
+    }
+
     @GetMapping("/sources")
     @Operation(summary = "Get all configured job aggregation sources and statuses")
     public ResponseEntity<List<CompanySourceDto>> getAllSources() {

@@ -16,6 +16,7 @@ import ManageJobs from './pages/ManageJobs';
 import RecruiterApplications from './pages/RecruiterApplications';
 import AdminDashboard from './pages/AdminDashboard';
 import FresherJobs from './pages/FresherJobs';
+import Companies from './pages/Companies';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
@@ -30,10 +31,12 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="/register/:role" element={<Register />} />
               <Route path="/jobs" element={<JobList />} />
               <Route path="/jobs/:id" element={<JobDetails />} />
               <Route path="/fresher-jobs" element={<FresherJobs />} />
+              <Route path="/companies" element={<Companies />} />
 
               {/* Candidate Routes */}
               <Route path="/candidate/dashboard" element={

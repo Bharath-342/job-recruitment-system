@@ -3,6 +3,7 @@ package com.jobrecruitment.provider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jobrecruitment.classifier.FresherClassificationResult;
+import com.jobrecruitment.classifier.FresherEligibilityService;
 import com.jobrecruitment.classifier.FresherJobClassifier;
 import com.jobrecruitment.classifier.SkillRelevanceExtractor;
 import com.jobrecruitment.entity.AggregatedJob;
@@ -27,14 +28,17 @@ public class AshbyJobProvider implements JobSourceProvider {
     private static final Logger log = LoggerFactory.getLogger(AshbyJobProvider.class);
     private final ObjectMapper objectMapper;
     private final FresherJobClassifier classifier;
+    private final FresherEligibilityService eligibilityService;
     private final SkillRelevanceExtractor skillExtractor;
     private final HttpClient httpClient;
 
     public AshbyJobProvider(ObjectMapper objectMapper,
                             FresherJobClassifier classifier,
+                            FresherEligibilityService eligibilityService,
                             SkillRelevanceExtractor skillExtractor) {
         this.objectMapper = objectMapper;
         this.classifier = classifier;
+        this.eligibilityService = eligibilityService;
         this.skillExtractor = skillExtractor;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
@@ -152,10 +156,17 @@ public class AshbyJobProvider implements JobSourceProvider {
         job.setRemote(rawJob.isRemote());
         job.setCurrency("INR");
 
+        // Strict 0-year fresher eligibility check
+        com.jobrecruitment.classifier.FresherEligibilityService.EligibilityResult eligibility = eligibilityService.determineEligibility(rawJob.getTitle(), rawJob.getDescription());
+        job.setEligibilityStatus(eligibility.status());
+        job.setMinimumExperienceYears(eligibility.minimumExperienceYears());
+        boolean isZeroYear = eligibility.status() == com.jobrecruitment.entity.EligibilityStatus.ELIGIBLE_ZERO_YEAR;
+        job.setFresher(isZeroYear);
+
+        // Classification
         FresherClassificationResult result = classifier.classify(rawJob.getTitle(), rawJob.getDescription());
-        job.setExperienceLevel(result.getExperienceLevel());
-        job.setFresher(result.isFresher());
-        job.setFresherConfidence(result.getConfidence());
+        job.setExperienceLevel(isZeroYear ? com.jobrecruitment.entity.ExperienceLevel.FRESHER : result.getExperienceLevel());
+        job.setFresherConfidence(isZeroYear ? Math.max(result.getConfidence(), 30) : result.getConfidence());
 
         job.setSkills(skillExtractor.extractSkills(rawJob.getTitle(), rawJob.getDescription()));
         job.setActive(true);

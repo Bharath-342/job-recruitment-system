@@ -12,6 +12,8 @@ public class SyncSummaryDto {
     private int jobsDeactivated;
     private int fresherJobsIdentified;
     private int duplicatesDetected;
+    private int jobsRejectedExperienceGreaterThanZero;
+    private int jobsRejectedExperienceUnknown;
     private LocalDateTime timestamp = LocalDateTime.now();
 
     public SyncSummaryDto() {}
@@ -42,6 +44,12 @@ public class SyncSummaryDto {
 
     public int getDuplicatesDetected() { return duplicatesDetected; }
     public void setDuplicatesDetected(int duplicatesDetected) { this.duplicatesDetected = duplicatesDetected; }
+
+    public int getJobsRejectedExperienceGreaterThanZero() { return jobsRejectedExperienceGreaterThanZero; }
+    public void setJobsRejectedExperienceGreaterThanZero(int jobsRejectedExperienceGreaterThanZero) { this.jobsRejectedExperienceGreaterThanZero = jobsRejectedExperienceGreaterThanZero; }
+
+    public int getJobsRejectedExperienceUnknown() { return jobsRejectedExperienceUnknown; }
+    public void setJobsRejectedExperienceUnknown(int jobsRejectedExperienceUnknown) { this.jobsRejectedExperienceUnknown = jobsRejectedExperienceUnknown; }
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }

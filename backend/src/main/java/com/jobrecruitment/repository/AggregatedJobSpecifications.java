@@ -30,9 +30,13 @@ public class AggregatedJobSpecifications {
                 predicates.add(cb.equal(root.get("isActive"), true));
             }
 
-            // Fresher filter (default: true for fresher searches)
-            if (isFresher != null) {
-                predicates.add(cb.equal(root.get("isFresher"), isFresher));
+            // Fresher filter (Strict 0-Year Policy: ELIGIBLE_ZERO_YEAR and minimumExperienceYears == 0)
+            if (Boolean.TRUE.equals(isFresher)) {
+                predicates.add(cb.equal(root.get("isFresher"), true));
+                predicates.add(cb.equal(root.get("eligibilityStatus"), com.jobrecruitment.entity.EligibilityStatus.ELIGIBLE_ZERO_YEAR));
+                predicates.add(cb.equal(root.get("minimumExperienceYears"), 0));
+            } else if (Boolean.FALSE.equals(isFresher)) {
+                predicates.add(cb.equal(root.get("isFresher"), false));
             }
 
             // Keyword filter across title, description, skills, companyName

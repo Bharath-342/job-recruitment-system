@@ -55,6 +55,7 @@ export const fresherJobService = {
   getFresherJob: (id) => api.get(`/jobs/fresher/${id}`),
   getStatistics: () => api.get('/jobs/statistics'),
   getCompanies: () => api.get('/jobs/companies'),
+  getCompaniesDirectory: (params) => api.get('/jobs/companies/directory', { params }),
   getSources: () => api.get('/jobs/sources'),
   triggerSync: (sourceId) => api.post('/jobs/sync', null, { params: { sourceId } }),
 };

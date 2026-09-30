@@ -14,7 +14,9 @@ import java.time.LocalDateTime;
     @Index(name = "idx_agg_is_fresher", columnList = "is_fresher"),
     @Index(name = "idx_agg_posted_at", columnList = "posted_at"),
     @Index(name = "idx_agg_source_provider", columnList = "source_provider"),
-    @Index(name = "idx_agg_remote", columnList = "remote")
+    @Index(name = "idx_agg_remote", columnList = "remote"),
+    @Index(name = "idx_agg_eligibility", columnList = "eligibility_status"),
+    @Index(name = "idx_agg_min_exp", columnList = "minimum_experience_years")
 })
 public class AggregatedJob {
 
@@ -82,6 +84,13 @@ public class AggregatedJob {
 
     @Column(length = 500)
     private String skills;
+
+    @Column(name = "minimum_experience_years")
+    private Integer minimumExperienceYears = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "eligibility_status", length = 30)
+    private EligibilityStatus eligibilityStatus = EligibilityStatus.ELIGIBLE_ZERO_YEAR;
 
     @Column(name = "is_fresher", nullable = false)
     private boolean isFresher = true;
@@ -192,6 +201,12 @@ public class AggregatedJob {
 
     public LocalDateTime getLastVerifiedAt() { return lastVerifiedAt; }
     public void setLastVerifiedAt(LocalDateTime lastVerifiedAt) { this.lastVerifiedAt = lastVerifiedAt; }
+
+    public Integer getMinimumExperienceYears() { return minimumExperienceYears; }
+    public void setMinimumExperienceYears(Integer minimumExperienceYears) { this.minimumExperienceYears = minimumExperienceYears; }
+
+    public EligibilityStatus getEligibilityStatus() { return eligibilityStatus; }
+    public void setEligibilityStatus(EligibilityStatus eligibilityStatus) { this.eligibilityStatus = eligibilityStatus; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

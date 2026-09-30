@@ -21,6 +21,7 @@ class GreenhouseJobProviderTest {
         provider = new GreenhouseJobProvider(
                 new ObjectMapper(),
                 new FresherJobClassifier(),
+                new com.jobrecruitment.classifier.FresherEligibilityService(new com.jobrecruitment.classifier.ExperienceRequirementParser()),
                 new SkillRelevanceExtractor()
         );
     }
@@ -59,6 +60,8 @@ class GreenhouseJobProviderTest {
         assertEquals("Graduate Software Engineer, Open Source and Linux", normalized.getTitle());
         assertEquals("https://job-boards.greenhouse.io/canonical/jobs/8142329", normalized.getApplicationUrl());
         assertTrue(normalized.isFresher());
+        assertEquals(com.jobrecruitment.entity.EligibilityStatus.ELIGIBLE_ZERO_YEAR, normalized.getEligibilityStatus());
+        assertEquals(0, normalized.getMinimumExperienceYears());
         assertEquals(ExperienceLevel.FRESHER, normalized.getExperienceLevel());
         assertTrue(normalized.isActive());
         assertTrue(normalized.getSkills().contains("Java"));

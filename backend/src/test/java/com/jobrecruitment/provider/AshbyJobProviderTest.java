@@ -20,6 +20,7 @@ class AshbyJobProviderTest {
         provider = new AshbyJobProvider(
                 new ObjectMapper(),
                 new FresherJobClassifier(),
+                new com.jobrecruitment.classifier.FresherEligibilityService(new com.jobrecruitment.classifier.ExperienceRequirementParser()),
                 new SkillRelevanceExtractor()
         );
     }
@@ -56,6 +57,8 @@ class AshbyJobProviderTest {
         assertEquals("Sentry", job.getCompanyName());
         assertEquals("https://jobs.ashbyhq.com/sentry/ashby-777", job.getApplicationUrl());
         assertTrue(job.isFresher());
+        assertEquals(com.jobrecruitment.entity.EligibilityStatus.ELIGIBLE_ZERO_YEAR, job.getEligibilityStatus());
+        assertEquals(0, job.getMinimumExperienceYears());
         assertTrue(job.isRemote());
         assertTrue(job.getSkills().contains("React"));
     }

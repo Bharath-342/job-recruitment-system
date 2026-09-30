@@ -26,24 +26,31 @@ export default function FresherJobs() {
   const pageSize = 9;
 
   const rolePresets = [
-    'Java Developer',
+    'Java Fresher',
+    'Java Backend',
     'Java Full Stack',
-    'Backend Developer',
+    'Software Engineer',
     'Associate Software Engineer',
     'Graduate Software Engineer',
-    'Trainee'
+    'Trainee Software Engineer'
   ];
 
   const locationPresets = [
     'All Locations',
-    'Bengaluru',
     'Hyderabad',
-    'Pune',
+    'Bengaluru',
     'Chennai',
+    'Pune',
     'Mumbai',
-    'Gurugram',
+    'Delhi NCR',
     'Noida',
-    'Remote'
+    'Gurgaon/Gurugram',
+    'Kolkata',
+    'Ahmedabad',
+    'Kochi',
+    'Visakhapatnam',
+    'Remote - India',
+    'India'
   ];
 
   // Fetch verified statistics
@@ -65,6 +72,16 @@ export default function FresherJobs() {
       console.error('Failed to load companies:', err);
     }
   };
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const kw = searchParams.get('keyword');
+    const comp = searchParams.get('company');
+    const loc = searchParams.get('location');
+    if (kw) setKeyword(kw);
+    if (comp) setSelectedCompany(comp);
+    if (loc) setLocation(loc);
+  }, []);
 
   // Fetch jobs
   const fetchJobs = useCallback(async (page = 0) => {
@@ -170,15 +187,14 @@ export default function FresherJobs() {
         >
           <Row className="align-items-center">
             <Col lg={8}>
-              <Badge bg="warning" text="dark" className="px-3 py-2 fs-6 mb-3 fw-bold">
-                ⚡ Real-Time Fresher Aggregator
+              <Badge bg="success" text="white" className="px-3 py-2 fs-6 mb-3 fw-bold">
+                ✓ STRICT 0-YEAR VERIFIED
               </Badge>
               <h1 className="display-5 fw-bold mb-3">
-                Current Fresher & Entry-Level Job Openings
+                Find Your First Job
               </h1>
               <p className="lead mb-4 text-white-50">
-                Aggregated in real-time from official public company job boards & ATS feeds (Greenhouse, Lever, Ashby).
-                No expired postings, no recruiters in the middle — apply directly on official company career portals!
+                Search current opportunities that accept candidates with zero professional experience.
               </p>
             </Col>
             <Col lg={4}>
@@ -404,10 +420,10 @@ export default function FresherJobs() {
                       )}
                     </div>
 
-                    {/* Fresher & Experience Tag */}
+                    {/* Fresher & Experience Tag - Strictly 0-Year Only */}
                     <div className="mb-3">
-                      <Badge bg="warning" text="dark" className="me-2 px-2 py-1">
-                        🎓 {job.experienceLevel || 'FRESHER'}
+                      <Badge bg="success" className="me-2 px-2 py-1">
+                        🎓 0 Years / Fresher Eligible
                       </Badge>
                       {job.employmentType && (
                         <Badge bg="secondary" className="px-2 py-1">
@@ -443,7 +459,7 @@ export default function FresherJobs() {
                         rel="noopener noreferrer"
                         className="btn btn-primary btn-sm px-3 fw-bold rounded-pill"
                       >
-                        Apply on Official Site ↗
+                        Apply on Official Website ↗
                       </a>
                     </div>
                   </Card.Body>
@@ -453,19 +469,29 @@ export default function FresherJobs() {
           </Row>
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Section 40 Requirement */}
         {!loading && jobs.length === 0 && (
           <Card className="border-0 shadow-sm rounded-4 text-center p-5 my-4">
             <Card.Body>
               <div style={{ fontSize: '3.5rem' }}>🔍</div>
-              <h4 className="fw-bold mt-3">No matching fresher positions found</h4>
+              <h4 className="fw-bold mt-3">No verified 0-year jobs found for this search.</h4>
               <p className="text-muted">
-                Try broadening your keyword, resetting the city filter, or checking back soon.
-                New jobs are synchronized automatically from official company career feeds.
+                Try another location, try another keyword, or try another role.
               </p>
-              <Button variant="outline-primary" onClick={handleResetFilters} className="mt-2 rounded-pill px-4">
-                Reset All Filters
-              </Button>
+              <div className="d-flex justify-content-center gap-2 flex-wrap mt-3">
+                <Button variant="outline-primary" size="sm" onClick={handleResetFilters} className="rounded-pill px-3">
+                  Reset All Filters
+                </Button>
+                <Button variant="outline-secondary" size="sm" onClick={() => { setLocation('Bengaluru'); }} className="rounded-pill px-3">
+                  Try Bengaluru
+                </Button>
+                <Button variant="outline-secondary" size="sm" onClick={() => { setLocation('Hyderabad'); }} className="rounded-pill px-3">
+                  Try Hyderabad
+                </Button>
+                <Button variant="outline-secondary" size="sm" onClick={() => { setKeyword('Java'); }} className="rounded-pill px-3">
+                  Try Java
+                </Button>
+              </div>
             </Card.Body>
           </Card>
         )}
