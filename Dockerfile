@@ -13,19 +13,16 @@ RUN npm run build
 # ==========================================
 # Stage 2: Build Spring Boot 3 Backend
 # ==========================================
-FROM eclipse-temurin:21-jdk-alpine AS backend-builder
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS backend-builder
 WORKDIR /app/backend
 
-COPY backend/pom.xml backend/mvnw ./
-COPY backend/.mvn ./.mvn
-RUN chmod +x ./mvnw && ./mvnw dependency:go-offline -B
-
+COPY backend/pom.xml ./
 COPY backend/src ./src
 
 # Copy built frontend assets directly into Spring Boot static resources
 COPY --from=frontend-builder /app/frontend/dist ./src/main/resources/static
 
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # ==========================================
 # Stage 3: Lightweight Production JRE Container
