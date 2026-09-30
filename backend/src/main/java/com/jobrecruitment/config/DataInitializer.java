@@ -247,6 +247,18 @@ public class DataInitializer implements CommandLineRunner {
             new CompanySource("Sumo Logic", "https://www.sumologic.com/company/careers", "GREENHOUSE", "sumologic", "India"),
             new CompanySource("LaunchDarkly", "https://launchdarkly.com/careers", "GREENHOUSE", "launchdarkly", "India"),
             new CompanySource("Groupon", "https://www.grouponcareers.com", "GREENHOUSE", "groupon", "India"),
+            new CompanySource("Zscaler", "https://www.zscaler.com/careers", "GREENHOUSE", "zscaler", "India"),
+            new CompanySource("Pure Storage", "https://www.purestorage.com/company/careers", "GREENHOUSE", "purestorage", "India"),
+            new CompanySource("Netskope", "https://www.netskope.com/company/careers", "GREENHOUSE", "netskope", "India"),
+            new CompanySource("SonicWall", "https://www.sonicwall.com/careers", "GREENHOUSE", "sonicwall", "India"),
+            new CompanySource("Commvault", "https://careers.commvault.com", "GREENHOUSE", "commvault", "India"),
+            new CompanySource("Druva", "https://www.druva.com/about/careers", "GREENHOUSE", "druva", "India"),
+            new CompanySource("BitGo", "https://www.bitgo.com/careers", "GREENHOUSE", "bitgo", "India"),
+            new CompanySource("SmartBear", "https://smartbear.com/company/careers", "GREENHOUSE", "smartbear", "India"),
+            new CompanySource("Sauce Labs", "https://saucelabs.com/careers", "GREENHOUSE", "saucelabs", "India"),
+            new CompanySource("Porter", "https://porter.in/careers", "GREENHOUSE", "porter", "India"),
+            new CompanySource("CRED", "https://cred.club/careers", "LEVER", "cred", "India"),
+            new CompanySource("Atlan", "https://atlan.com/careers", "ASHBY", "atlan", "India"),
             new CompanySource("Navi", "https://navi.com/careers", "ASHBY", "navi", "India")
         );
 
@@ -261,12 +273,12 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // 8. Disable foreign-only sources that do not have verified India hiring
+        // 8. Disable foreign-only or inaccessible sources
         List<String> foreignIdentifiers = List.of(
             "gitlab", "coinbase", "samsara", "databricks", "okta",
             "pinterest", "brex", "reddit", "affirm", "discord", "miro",
             "hashicorp", "palantir", "spotify", "netflix", "canva",
-            "sentry", "ramp", "linear"
+            "sentry", "ramp", "linear", "figma", "toasttab", "canonical"
         );
         for (String fid : foreignIdentifiers) {
             companySourceRepository.findAll().stream()

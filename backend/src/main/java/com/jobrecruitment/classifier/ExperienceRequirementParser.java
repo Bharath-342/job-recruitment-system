@@ -53,12 +53,12 @@ public class ExperienceRequirementParser {
             "freshers?\\s+(?:can\\s+apply|eligible|welcome|encouraged|only)|" +
             "fresh\\s+graduates?|recent\\s+graduates?|freshers?|" +
             "college\\s+graduates?|campus\\s+hire|campus\\s+recruitment|new\\s+grad(?:uates?)?|" +
-            "(?:202[4-9]|2030)\\s+graduates?|batch\\s+of\\s+(?:202[4-9]|2030))\\b",
+            "(?:202[4-9]|2030)\\s+(?:graduates?|passouts?|batch)|batch\\s+of\\s+(?:202[4-9]|2030)|graduating\\s+in\\s+(?:202[4-9]|2030))\\b",
             Pattern.CASE_INSENSITIVE);
 
-    // Entry-level title signals (Intern, Trainee, Graduate Trainee, Apprentice) per Section 8 & 36
+    // Entry-level title signals (Intern, Trainee, Graduate Trainee, Apprentice, Junior / Associate Developer) per Section 3, 8 & 36
     private static final Pattern ENTRY_LEVEL_TITLE_PATTERN = Pattern.compile(
-            "\\b(intern|internship|trainee|apprentice|graduate\\s+engineer(?:\\s+trainee)?|graduate\\s+trainee|software\\s+trainee|developer\\s+trainee|entry[ -]?level)\\b",
+            "\\b(intern|internship|trainee|apprentice|graduate(?:\\s+software)?(?:\\s+engineer)?(?:\\s+trainee)?|graduate\\s+trainee|software\\s+trainee|developer\\s+trainee|entry[ -]?level|junior\\s+(?:software\\s+)?(?:developer|engineer|analyst)|associate\\s+(?:software\\s+)?(?:developer|engineer))\\b",
             Pattern.CASE_INSENSITIVE);
 
     // Single year pattern check: e.g. "1 year experience", "2 years experience", "3 years"

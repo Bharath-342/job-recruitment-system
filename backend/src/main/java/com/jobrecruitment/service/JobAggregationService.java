@@ -179,8 +179,8 @@ public class JobAggregationService {
                 summary.setSourcesFailed(summary.getSourcesFailed() + 1);
                 updateSourceError(source, e.getMessage());
             }
-            // Small delay between sources to reduce memory pressure on free-tier containers
-            try { Thread.sleep(1500); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
+            // Small delay between sources to balance rate-limits and throughput
+            try { Thread.sleep(300); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); break; }
         }
 
         log.info("Sync completed: Processed={}, Successful={}, Failed={}, JobsFound={}, Inserted={}, Updated={}, Deactivated={}, Freshers={}",
