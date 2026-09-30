@@ -258,6 +258,14 @@ public class DataInitializer implements CommandLineRunner {
             new CompanySource("Sauce Labs", "https://saucelabs.com/careers", "GREENHOUSE", "saucelabs", "India"),
             new CompanySource("Porter", "https://porter.in/careers", "GREENHOUSE", "porter", "India"),
             new CompanySource("CRED", "https://cred.club/careers", "LEVER", "cred", "India"),
+            new CompanySource("Paytm", "https://paytm.com/careers", "LEVER", "paytm", "India"),
+            new CompanySource("FamPay", "https://fampay.in/careers", "LEVER", "fampay", "India"),
+            new CompanySource("Agoda", "https://careersatagoda.com", "GREENHOUSE", "agoda", "India"),
+            new CompanySource("Airbnb", "https://careers.airbnb.com", "GREENHOUSE", "airbnb", "India"),
+            new CompanySource("Adyen", "https://careers.adyen.com", "GREENHOUSE", "adyen", "India"),
+            new CompanySource("Workato", "https://www.workato.com/careers", "GREENHOUSE", "workato", "India"),
+            new CompanySource("Yugabyte", "https://www.yugabyte.com/careers", "GREENHOUSE", "yugabyte", "India"),
+            new CompanySource("Starburst", "https://www.starburst.io/careers", "GREENHOUSE", "starburst", "India"),
             new CompanySource("Atlan", "https://atlan.com/careers", "ASHBY", "atlan", "India"),
             new CompanySource("Navi", "https://navi.com/careers", "ASHBY", "navi", "India")
         );
