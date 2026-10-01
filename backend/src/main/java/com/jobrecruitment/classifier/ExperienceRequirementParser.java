@@ -41,7 +41,14 @@ public class ExperienceRequirementParser {
             "\\b(?:experienced candidates only|prior professional experience required|prior industry experience required)\\b",
             Pattern.CASE_INSENSITIVE);
 
-    // Explicit 0-year / Fresher patterns
+    // Graduation batches strictly above 2026 (e.g. 2027, 2028, 2029, 2030+) - User requirement: batch <= 2026 only, not above 2026
+    private static final Pattern FUTURE_BATCH_ABOVE_2026_PATTERN = Pattern.compile(
+            "\\b(?:(?:batch\\s+(?:of\\s+)?|class\\s+(?:of\\s+)?|graduating\\s+(?:in|by)?|graduates?\\s+(?:of|in|for)?|passouts?\\s+(?:of|in)?|interns?\\s+(?:of|for)?)\\s*(?:202[7-9]|20[3-9]\\d)|" +
+            "(?:202[7-9]|20[3-9]\\d)\\s*(?:batch|graduates?|passouts?|pass\\s*out|class|intern(?:ship)?)|" +
+            "graduating\\s+(?:in|by)?\\s*(?:202[7-9]|20[3-9]\\d))\\b",
+            Pattern.CASE_INSENSITIVE);
+
+    // Explicit 0-year / Fresher patterns (Batches up to 2026 only)
     private static final Pattern ZERO_YEAR_EXPLICIT_PATTERN = Pattern.compile(
             "\\b(?:0\\s*(?:years?|yrs?)(?:\\s+of)?(?:\\s+experience|\\s+exp)?|" +
             "0\\s*(?:-|to)\\s*1\\s*(?:years?|yrs?)(?:\\s+of)?(?:\\s+experience|\\s+exp)?|" +
@@ -56,7 +63,7 @@ public class ExperienceRequirementParser {
             "fresh(?:ers?)?\\s+graduates?\\s*(?:eligible|welcome|can\\s+apply)?|" +
             "recent\\s+graduates?|freshers?|" +
             "college\\s+graduates?|university\\s+graduates?|campus\\s+(?:hire|recruitment|drive)|new\\s+grad(?:uates?)?|" +
-            "(?:202[4-9]|2030)\\s+(?:graduates?|passouts?|batch)|batch\\s+of\\s+(?:202[4-9]|2030)|graduating\\s+in\\s+(?:202[4-9]|2030))\\b",
+            "(?:201\\d|202[0-6])\\s+(?:graduates?|passouts?|batch)|batch\\s+of\\s+(?:201\\d|202[0-6])|graduating\\s+(?:in|by)?\\s*(?:201\\d|202[0-6]))\\b",
             Pattern.CASE_INSENSITIVE);
 
     // Entry-level title signals per Section 2, 6 & 8
@@ -91,6 +98,20 @@ public class ExperienceRequirementParser {
                     95,
                     EligibilityStatus.NOT_ELIGIBLE,
                     "Senior / Lead title excluded: " + seniorMatcher.group()
+            );
+        }
+
+        // 1b. Check for Graduation Batches Above 2026 -> Hard NOT_ELIGIBLE (User requirement: batch <= 2026 only, not above 2026)
+        Matcher futureBatchMatcher = FUTURE_BATCH_ABOVE_2026_PATTERN.matcher(fullText);
+        if (futureBatchMatcher.find()) {
+            String matchedSnippet = futureBatchMatcher.group();
+            return new ParsedExperience(
+                    0,
+                    null,
+                    matchedSnippet,
+                    95,
+                    EligibilityStatus.NOT_ELIGIBLE,
+                    "Graduation batch above 2026 excluded: " + matchedSnippet
             );
         }
 

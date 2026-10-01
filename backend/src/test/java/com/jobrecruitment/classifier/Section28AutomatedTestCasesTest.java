@@ -175,10 +175,10 @@ class Section28AutomatedTestCasesTest {
     }
 
     @Test
-    @DisplayName("16. Bangalore + Software Engineer - Winter Intern -> PASS (Section 8 & 36)")
+    @DisplayName("16. Bangalore + Software Engineer - Winter Intern (2026 Graduates) -> PASS (Section 8 & 36)")
     void test16_BangaloreWinterIntern() {
-        boolean passed = evaluateJobWithTitle("Software Engineer - Winter Intern", "Bangalore, India", "Bachelor's degree in Computer Science, 2026/2027 graduates. General-purpose languages Java/Python.");
-        assertTrue(passed, "Bangalore Winter Intern must PASS");
+        boolean passed = evaluateJobWithTitle("Software Engineer - Winter Intern", "Bangalore, India", "Bachelor's degree in Computer Science, 2026 graduates. General-purpose languages Java/Python.");
+        assertTrue(passed, "Bangalore Winter Intern for 2026 graduates must PASS");
     }
 
     // ==========================================
@@ -231,6 +231,48 @@ class Section28AutomatedTestCasesTest {
     void testSection33_HRExecutiveHyderabadZeroYears() {
         boolean passed = evaluateJobWithTitle("HR Executive", "Hyderabad, India", "0 years experience. Fresh MBA graduates in HR.");
         assertFalse(passed, "HR Executive, Hyderabad, 0 years must FAIL (non-IT role)");
+    }
+
+    // ==========================================
+    // BATCH ELIGIBILITY TESTS (2026 AND BELOW ALLOWED, >2026 EXCLUDED)
+    // ==========================================
+    @Test
+    @DisplayName("Batch 2026 VALID: 2026 graduates, Pune, Java -> PASS")
+    void testBatch2026_GraduatesPune() {
+        boolean passed = evaluateJobWithTitle("Software Engineer", "Pune, India", "2026 graduates eligible. Knowledge of Java and Spring Boot.");
+        assertTrue(passed, "2026 graduates in Pune must PASS");
+    }
+
+    @Test
+    @DisplayName("Batch 2026 VALID: Batch of 2026, Bengaluru -> PASS")
+    void testBatch2026_BatchOf2026Bengaluru() {
+        boolean passed = evaluateJobWithTitle("Associate Software Developer", "Bengaluru, India", "Batch of 2026 hiring drive for Core Java developers.");
+        assertTrue(passed, "Batch of 2026 in Bengaluru must PASS");
+    }
+
+    @Test
+    @DisplayName("Batch 2027 INVALID: Rubrik Winter Intern with 2027 graduates -> FAIL")
+    void testBatch2027_RubrikWinterIntern() {
+        boolean passed = evaluateJobWithTitle(
+                "Software Engineer - Winter Intern",
+                "Bangalore, India",
+                "- CGPA 8 and above\n- 2027 graduates of Circuital branches only\n- Available from January 2027 to May 2027 in Bangalore"
+        );
+        assertFalse(passed, "2027 graduates must FAIL (batch above 2026 strictly excluded)");
+    }
+
+    @Test
+    @DisplayName("Batch 2027 INVALID: Graduating in 2027 -> FAIL")
+    void testBatch2027_GraduatingIn2027() {
+        boolean passed = evaluateJobWithTitle("Software Engineer", "Hyderabad, India", "Graduating in 2027. Summer internship program.");
+        assertFalse(passed, "Graduating in 2027 must FAIL (batch above 2026 strictly excluded)");
+    }
+
+    @Test
+    @DisplayName("Batch 2028 INVALID: 2028 batch candidates -> FAIL")
+    void testBatch2028_BatchCandidates() {
+        boolean passed = evaluateJobWithTitle("Trainee Developer", "Hyderabad, India", "2028 batch candidates only.");
+        assertFalse(passed, "2028 batch must FAIL (batch above 2026 strictly excluded)");
     }
 
     // ==========================================

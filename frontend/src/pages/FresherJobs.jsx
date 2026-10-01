@@ -52,6 +52,7 @@ export default function FresherJobs() {
   ];
 
   const rolePresets = [
+    '2026 Batch',
     'Java Full Stack',
     'Java Backend',
     'Java Fresher',
@@ -292,12 +293,15 @@ export default function FresherJobs() {
                 <Badge bg="warning" text="dark" className="px-3 py-2 fs-6 fw-bold">
                   ☕ JAVA FULL STACK FOCUS
                 </Badge>
+                <Badge bg="info" text="dark" className="px-3 py-2 fs-6 fw-bold">
+                  🎓 2026 BATCH & FRESHERS ONLY
+                </Badge>
               </div>
               <h1 className="display-5 fw-bold mb-3">
                 India Java & IT Fresher Job Discovery
               </h1>
               <p className="lead mb-4 text-white-50">
-                Discover verified Java Full Stack, Backend, and Software Engineering openings for freshers across India. Zero experience required. Continuously updated from legitimate career feeds.
+                Discover verified Java Full Stack, Backend, and Software Engineering openings for 2026 graduates and freshers across India. Zero experience required. Strictly verified up to 2026 batch only (post-2026 batches excluded).
               </p>
             </Col>
             <Col lg={4}>
@@ -600,6 +604,15 @@ export default function FresherJobs() {
                           <Badge bg="success" className="px-2 py-1">
                             Status: Verified
                           </Badge>
+                          {(job.experienceText && (job.experienceText.toLowerCase().includes('2026') || job.experienceText.toLowerCase().includes('graduat'))) ? (
+                            <Badge bg="warning" text="dark" className="px-2 py-1 fw-bold">
+                              🎓 {job.experienceText.toLowerCase().includes('2026') ? '2026 Batch' : 'Fresh Graduate'}
+                            </Badge>
+                          ) : (
+                            <Badge bg="light" text="dark" className="border px-2 py-1">
+                              🎓 Batch ≤ 2026
+                            </Badge>
+                          )}
                           {job.employmentType && (
                             <Badge bg="secondary" className="px-2 py-1">
                               {job.employmentType}
