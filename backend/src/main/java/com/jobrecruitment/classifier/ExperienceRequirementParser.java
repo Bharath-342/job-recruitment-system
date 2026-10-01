@@ -47,18 +47,28 @@ public class ExperienceRequirementParser {
             "0\\s*(?:-|to)\\s*1\\s*(?:years?|yrs?)(?:\\s+of)?(?:\\s+experience|\\s+exp)?|" +
             "0\\s*(?:-|to)\\s*2\\s*(?:years?|yrs?)(?:\\s+of)?(?:\\s+experience|\\s+exp)?|" +
             "candidates with 0 years experience|" +
-            "no\\s+(?:prior\\s+)?experience\\s+(?:required|needed|necessary)|" +
+            "no\\s+(?:prior\\s+)?(?:professional\\s+|industry\\s+)?experience(?:\\s+(?:required|needed|necessary))?|" +
             "graduates with no experience|" +
-            "entry[ -]?level\\s+position\\s+with\\s+no\\s+experience\\s+required|" +
+            "entry[ -]?level|" +
+            "early[ -]?career|" +
+            "graduate[ -]?hiring|" +
             "freshers?\\s+(?:can\\s+apply|eligible|welcome|encouraged|only)|" +
-            "fresh\\s+graduates?|recent\\s+graduates?|freshers?|" +
-            "college\\s+graduates?|campus\\s+hire|campus\\s+recruitment|new\\s+grad(?:uates?)?|" +
+            "fresh(?:ers?)?\\s+graduates?\\s*(?:eligible|welcome|can\\s+apply)?|" +
+            "recent\\s+graduates?|freshers?|" +
+            "college\\s+graduates?|university\\s+graduates?|campus\\s+(?:hire|recruitment|drive)|new\\s+grad(?:uates?)?|" +
             "(?:202[4-9]|2030)\\s+(?:graduates?|passouts?|batch)|batch\\s+of\\s+(?:202[4-9]|2030)|graduating\\s+in\\s+(?:202[4-9]|2030))\\b",
             Pattern.CASE_INSENSITIVE);
 
-    // Entry-level title signals (Intern, Trainee, Graduate Trainee, Apprentice, Junior / Associate Developer) per Section 3, 8 & 36
+    // Entry-level title signals per Section 2, 6 & 8
     private static final Pattern ENTRY_LEVEL_TITLE_PATTERN = Pattern.compile(
-            "\\b(intern|internship|trainee|apprentice|graduate(?:\\s+software)?(?:\\s+engineer)?(?:\\s+trainee)?|graduate\\s+trainee|software\\s+trainee|developer\\s+trainee|entry[ -]?level|junior\\s+(?:software\\s+)?(?:developer|engineer|analyst)|associate\\s+(?:software\\s+)?(?:developer|engineer))\\b",
+            "\\b(intern|internship|trainee|apprentice|" +
+            "graduate(?:\\s+software)?(?:\\s+engineer)?(?:\\s+trainee)?|graduate\\s+trainee|software\\s+trainee|developer\\s+trainee|java\\s+trainee|" +
+            "software\\s+engineer\\s+trainee|software\\s+developer\\s+trainee|graduate\\s+engineer\\s+trainee|" +
+            "entry[ -]?level(?:\\s+software)?(?:\\s+engineer|\\s+developer)?|" +
+            "junior\\s+(?:java\\s+)?(?:software\\s+)?(?:developer|engineer|analyst)|" +
+            "software\\s+engineer\\s+i\\b|software\\s+developer\\s+i\\b|engineer\\s+i\\b|developer\\s+i\\b|" +
+            "associate\\s+(?:software\\s+|technology\\s+|application\\s+)?(?:developer|engineer|technology|consultant|analyst)?|" +
+            "programmer\\s+analyst\\s+trainee|systems?\\s+engineer\\s+trainee)\\b",
             Pattern.CASE_INSENSITIVE);
 
     // Single year pattern check: e.g. "1 year experience", "2 years experience", "3 years"
@@ -89,7 +99,7 @@ public class ExperienceRequirementParser {
         String maskedText = fullText
                 .replaceAll("(?i)\\b0\\s*(?:-|to)\\s*[12]?\\s*(?:years?|yrs?)(?:\\s+of)?(?:\\s+experience)?\\b", "__ZERO_RANGE__")
                 .replaceAll("(?i)\\b0\\s*(?:years?|yrs?)\\b", "__ZERO_YEARS__")
-                .replaceAll("(?i)\\bno\\s+(?:prior\\s+)?experience\\s+(?:required|needed|necessary)\\b", "__NO_EXP__");
+                .replaceAll("(?i)\\bno\\s+(?:prior\\s+)?(?:professional\\s+|industry\\s+)?experience(?:\\s+(?:required|needed|necessary))?\\b", "__NO_EXP__");
 
         // 2. Check for Mandatory Prior Experience (1+ years, 2+ years, 1-3 years, etc.)
         // Section 9 Conflict Rule: Takes priority over any title signal (e.g. Graduate + 2 yrs -> REJECT)

@@ -270,7 +270,8 @@ public class DataInitializer implements CommandLineRunner {
             new CompanySource("Yugabyte", "https://www.yugabyte.com/careers", "GREENHOUSE", "yugabyte", "India"),
             new CompanySource("Starburst", "https://www.starburst.io/careers", "GREENHOUSE", "starburst", "India"),
             new CompanySource("Atlan", "https://atlan.com/careers", "ASHBY", "atlan", "India"),
-            new CompanySource("Navi", "https://navi.com/careers", "ASHBY", "navi", "India")
+            new CompanySource("Navi", "https://navi.com/careers", "ASHBY", "navi", "India"),
+            new CompanySource("Deliveroo", "https://careers.deliveroo.co.uk", "GREENHOUSE", "deliveroo", "India")
         );
 
         for (CompanySource src : defaultSources) {

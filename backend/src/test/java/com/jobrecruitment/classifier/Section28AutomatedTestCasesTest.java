@@ -182,6 +182,58 @@ class Section28AutomatedTestCasesTest {
     }
 
     // ==========================================
+    // SECTION 33: CRITICAL EXAMPLES TEST SUITE
+    // ==========================================
+    @Test
+    @DisplayName("Section 33 VALID: Java Developer, Hyderabad, 0 years -> PASS")
+    void testSection33_JavaDeveloperHyderabadZeroYears() {
+        boolean passed = evaluateJobWithTitle("Java Developer", "Hyderabad, India", "0 years experience. Freshers welcome with Java, OOP, and SQL knowledge.");
+        assertTrue(passed, "Java Developer, Hyderabad, 0 years must PASS");
+    }
+
+    @Test
+    @DisplayName("Section 33 VALID: Associate Software Engineer, Bengaluru, Freshers, Java/Spring Boot -> PASS")
+    void testSection33_AssociateSoftwareEngineerBengaluruFreshers() {
+        boolean passed = evaluateJobWithTitle("Associate Software Engineer", "Bengaluru, India", "Freshers eligible. Skills: Java, Spring Boot, React, and REST APIs.");
+        assertTrue(passed, "Associate Software Engineer, Bengaluru, Freshers, Java/Spring Boot must PASS");
+    }
+
+    @Test
+    @DisplayName("Section 33 VALID: Graduate Software Engineer, Pune, No experience required, Java -> PASS")
+    void testSection33_GraduateSoftwareEngineerPuneNoExp() {
+        boolean passed = evaluateJobWithTitle("Graduate Software Engineer", "Pune, India", "No experience required. Looking for fresh graduates with Core Java.");
+        assertTrue(passed, "Graduate Software Engineer, Pune, No experience required, Java must PASS");
+    }
+
+    @Test
+    @DisplayName("Section 33 INVALID: Java Developer, London, 0 years -> FAIL")
+    void testSection33_JavaDeveloperLondonZeroYears() {
+        boolean passed = evaluateJobWithTitle("Java Developer", "London, UK", "0 years experience required. Freshers welcome.");
+        assertFalse(passed, "Java Developer, London, 0 years must FAIL (foreign location)");
+    }
+
+    @Test
+    @DisplayName("Section 33 INVALID: Software Engineer, New York, Fresh graduate -> FAIL")
+    void testSection33_SoftwareEngineerNewYorkFreshGrad() {
+        boolean passed = evaluateJobWithTitle("Software Engineer", "New York, USA", "Fresh graduate role. 0-1 years experience.");
+        assertFalse(passed, "Software Engineer, New York, Fresh graduate must FAIL (foreign location)");
+    }
+
+    @Test
+    @DisplayName("Section 33 INVALID: Java Developer, Hyderabad, 2 years -> FAIL")
+    void testSection33_JavaDeveloperHyderabadTwoYears() {
+        boolean passed = evaluateJobWithTitle("Java Developer", "Hyderabad, India", "Minimum 2 years of Java development experience required.");
+        assertFalse(passed, "Java Developer, Hyderabad, 2 years must FAIL (experience > 0)");
+    }
+
+    @Test
+    @DisplayName("Section 33 INVALID: HR Executive, Hyderabad, 0 years -> FAIL")
+    void testSection33_HRExecutiveHyderabadZeroYears() {
+        boolean passed = evaluateJobWithTitle("HR Executive", "Hyderabad, India", "0 years experience. Fresh MBA graduates in HR.");
+        assertFalse(passed, "HR Executive, Hyderabad, 0 years must FAIL (non-IT role)");
+    }
+
+    // ==========================================
     // SECTION 8: COUNTRY NORMALIZER TESTS
     // ==========================================
     @Test

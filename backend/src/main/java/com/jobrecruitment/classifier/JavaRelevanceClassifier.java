@@ -32,8 +32,10 @@ public class JavaRelevanceClassifier {
             "\\b(human resources|hr\\b|talent acquisition|recruiter|recruitment|people team|hiring coordinator|" +
             "accounts payable|accounts receivable|payroll|accountant|accounting|finance|financial analyst|audit|tax|" +
             "sales\\b|sales executive|business development|tele caller|telecaller|b2b sales|sales associate|" +
-            "marketing|copywriter|content writer|content creator|video editor|social media|creative & communications|pr executive|" +
-            "customer service|call center|bpo|hotel operations|operations manager|relationship manager|portfolio specialist|" +
+            "marketing|youtube|content\\b|copywriter|content writer|content creator|video editor|social media|creative & communications|pr executive|" +
+            "graphic designer|ui/ux designer|ux designer|product designer|visual designer|" +
+            "program manager|project manager|project/\\s*program|program intern|project intern|product operations|operations intern|" +
+            "customer service|customer success|call center|bpo|hotel operations|operations manager|relationship manager|portfolio specialist|" +
             "mechanical|civil engineer|electrical engineer|chemical engineer|nurse|healthcare|medical|doctor|legal counsel|lawyer)\\b",
             Pattern.CASE_INSENSITIVE);
 
@@ -84,9 +86,11 @@ public class JavaRelevanceClassifier {
 
         // Verify it is genuinely an IT / Software role
         boolean isItTitle = IT_SOFTWARE_TITLE_PATTERN.matcher(lowerTitle).find();
-        boolean hasTechKeyword = Pattern.compile("\\b(java|spring|software|developer|coding|programming|algorithms?|python|frontend|backend)\\b", Pattern.CASE_INSENSITIVE).matcher(fullText).find();
+        boolean hasRealCodingTech = Pattern.compile(
+                "\\b(java\\b|spring|python\\b|c\\+\\+|golang|react|angular|node|javascript|typescript|sql\\b|mysql|postgresql|rest api|microservices|html|css|junit|selenium|automation testing|docker|kubernetes|algorithms? and data structures)\\b",
+                Pattern.CASE_INSENSITIVE).matcher(fullText).find();
 
-        if (!isItTitle && !hasTechKeyword) {
+        if (!isItTitle && !hasRealCodingTech) {
             return new JavaRelevanceResult(
                     false,
                     RoleCategory.OTHER,
